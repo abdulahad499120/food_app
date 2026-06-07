@@ -1,183 +1,228 @@
 package com.example.foodapp.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import com.example.foodapp.data.models.Product
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import com.example.foodapp.theme.BrandPrimary
+import com.example.foodapp.theme.BrandSecondary
 import com.example.foodapp.theme.SurfaceWhite
 import com.example.foodapp.theme.TextPrimary
-import com.example.foodapp.ui.components.BottomNavBar
-import com.example.foodapp.ui.components.BottomNavItem
-import com.example.foodapp.ui.components.GhostButton
-import com.example.foodapp.ui.components.PrimaryButton
-import com.example.foodapp.ui.components.ProductGridItem
-import com.example.foodapp.ui.components.EmptyStateView
-import com.example.foodapp.ui.components.ErrorStateView
-import com.example.foodapp.ui.state.MenuUiState
-import com.example.foodapp.ui.state.MenuViewModel
+import com.example.foodapp.theme.VAL_BRAND_PRIMARY
+import com.example.foodapp.theme.VAL_SURFACE_DARK
 import com.example.foodapp.ui.state.AuthState
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: MenuViewModel = viewModel(),
     authState: AuthState = AuthState.Unauthenticated,
-    onProductClick: (Product) -> Unit = {}
+    cartItemCount: Int = 0,
+    onNavigateToLocator: () -> Unit = {},
+    onNavigateToAuth: () -> Unit = {},
+    onNavigateToOrder: () -> Unit = {},
+    onNavigateToCart: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
 
-    Box(
-        modifier = modifier.fillMaxSize()
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SurfaceWhite)
+            .verticalScroll(scrollState)
     ) {
-        AnimatedContent(
-            targetState = uiState,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-            },
-            label = "HomeScreenStateAnimation"
-        ) { state ->
-            when (state) {
-                is MenuUiState.Loading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = BrandPrimary
-                    )
-                }
-                is MenuUiState.Error -> {
-                    ErrorStateView(
-                        errorMessage = state.message,
-                        onRetry = { viewModel.loadData() }, // Assuming loadData is accessible or we just let it retry somehow
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                is MenuUiState.Success -> {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    val greetingName = if (authState is AuthState.Authenticated) {
-                        authState.user.name
-                    } else {
-                        "Guest"
-                    }
-                    
-                    Text(
-                        text = "Good Afternoon, $greetingName!",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+        // Top App Bar Elements (Rendered inline for Home Hub)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left: Sign In or Greeting
+            if (authState is AuthState.Unauthenticated) {
+                Text(
+                    text = "Sign in",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = VAL_BRAND_PRIMARY,
+                    modifier = Modifier.clickable { onNavigateToAuth() }
+                )
+            } else {
+                Text(
+                    text = "Welcome, ${(authState as? AuthState.Authenticated)?.user?.name ?: "Member"}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+            // Center: Stores Pin
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { onNavigateToLocator() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Stores",
+                    tint = VAL_BRAND_PRIMARY,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Stores",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            }
+
+            // Right: Profile Avatar
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                .background(Color.LightGray.copy(alpha = 0.3f))
+                .clickable { onNavigateToCart() },
+            contentAlignment = Alignment.Center
+        ) {
+            BadgedBox(
+                badge = { 
+                    if (cartItemCount > 0) {
+                        Badge { Text(cartItemCount.toString()) }
+                    } 
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Cart",
+                    tint = TextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Hero Unit
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = VAL_BRAND_PRIMARY.copy(alpha = 0.1f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // In a real app this would be an Image. Using Box placeholder for now to match 1:1 structure.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1.5f)
+                        .background(VAL_BRAND_PRIMARY.copy(alpha = 0.3f))
+                )
+                
+                Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = "Menu Categories",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        text = "Summer's here. Dive right in.",
+                        style = MaterialTheme.typography.headlineMedium, // H2 semantic equivalent
+                        fontWeight = FontWeight.ExtraBold,
+                        color = TextPrimary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth()
+                    Text(
+                        text = "Cool off with our vibrant, refreshing new summer lineup.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { onNavigateToOrder() },
+                        colors = ButtonDefaults.buttonColors(containerColor = VAL_BRAND_PRIMARY),
+                        shape = RoundedCornerShape(50)
                     ) {
-                        item { Spacer(modifier = Modifier.padding(8.dp)) }
-                        
-                        // "All" chip
-                        item {
-                            if (state.selectedCategoryId == null) {
-                                PrimaryButton(onClick = { viewModel.selectCategory(null) }) {
-                                    Text(text = "All")
-                                }
-                            } else {
-                                GhostButton(onClick = { viewModel.selectCategory(null) }) {
-                                    Text(text = "All")
-                                }
-                            }
-                            Spacer(modifier = Modifier.padding(4.dp))
-                        }
-
-                        items(state.categories) { category ->
-                            if (state.selectedCategoryId == category.id) {
-                                PrimaryButton(onClick = { viewModel.selectCategory(category.id) }) {
-                                    Text(text = category.name)
-                                }
-                            } else {
-                                GhostButton(onClick = { viewModel.selectCategory(category.id) }) {
-                                    Text(text = category.name)
-                                }
-                            }
-                            Spacer(modifier = Modifier.padding(4.dp))
-                        }
-                        item { Spacer(modifier = Modifier.padding(8.dp)) }
+                        Text("Explore the summer menu", modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                     }
+                }
+            }
+        }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Loyalty Conversion Module
+        if (authState is AuthState.Unauthenticated) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = VAL_SURFACE_DARK),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        text = "Popular Near You",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        text = "ICE LAND REWARDS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White.copy(alpha = 0.7f),
+                        letterSpacing = 1.2.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Let us treat you",
+                        style = MaterialTheme.typography.headlineSmall, // H3 semantic
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    if (state.filteredProducts.isEmpty()) {
-                        EmptyStateView(
-                            icon = Icons.Default.Search,
-                            title = "No items found",
-                            message = "Try selecting a different category.",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    } else {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp)
-                                .weight(1f) // Ensure it takes remaining space properly
+                    Text(
+                        text = "Earn Stars, get free ice creams, dry fruits, and enjoy exclusive perks. Join today!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row {
+                        Button(
+                            onClick = { onNavigateToAuth() },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            shape = RoundedCornerShape(50)
                         ) {
-                            items(state.filteredProducts) { product ->
-                                ProductGridItem(
-                                    imageUrl = product.localImagePath,
-                                    title = product.name,
-                                    price = product.price,
-                                    onClick = { onProductClick(product) }
-                                )
-                            }
+                            Text("Join now", color = VAL_SURFACE_DARK, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        OutlinedButton(
+                            onClick = { onNavigateToAuth() },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text("Sign in", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
-        }
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

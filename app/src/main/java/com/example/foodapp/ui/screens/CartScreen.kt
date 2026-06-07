@@ -34,6 +34,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.foundation.background
 
 @Composable
 fun CartScreen(
@@ -44,6 +45,8 @@ fun CartScreen(
     val cartState by CartManager.cartState.collectAsState()
 
     Scaffold(
+        modifier = modifier.fillMaxSize().background(com.example.foodapp.theme.VAL_BACKGROUND),
+        containerColor = com.example.foodapp.theme.VAL_BACKGROUND,
         topBar = {
             Surface(
                 color = SurfaceWhite,

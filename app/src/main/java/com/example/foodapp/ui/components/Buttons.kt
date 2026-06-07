@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.foodapp.theme.BrandPrimary
+import com.example.foodapp.theme.VAL_BRAND_PRIMARY
 import com.example.foodapp.theme.DividerColor
 import com.example.foodapp.theme.FoodAppTheme
 import com.example.foodapp.theme.SurfaceWhite
@@ -35,7 +35,7 @@ fun PrimaryButton(
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = BrandPrimary,
+            containerColor = VAL_BRAND_PRIMARY,
             contentColor = SurfaceWhite,
             disabledContainerColor = DividerColor,
             disabledContentColor = TextSecondary
@@ -57,9 +57,9 @@ fun SecondaryButton(
         modifier = modifier.height(48.dp),
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, if (enabled) BrandPrimary else DividerColor),
+        border = BorderStroke(1.dp, if (enabled) VAL_BRAND_PRIMARY else DividerColor),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = BrandPrimary,
+            contentColor = VAL_BRAND_PRIMARY,
             disabledContentColor = TextSecondary
         ),
         contentPadding = PaddingValues(horizontal = 24.dp),
@@ -80,7 +80,7 @@ fun GhostButton(
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = BrandPrimary,
+            contentColor = VAL_BRAND_PRIMARY,
             disabledContentColor = TextSecondary
         ),
         contentPadding = PaddingValues(horizontal = 16.dp),

@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1019759569001-kff6j40mc1tb143jb60mmjb3mtsemei6.apps.googleusercontent.com",
+          "client_id": "1019759569001-24cm82lhuv26qvci9b6753tm0o5op6sf.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.ahad.foodapp",
-            "certificate_hash": "773cac5958ac325606eb71e7dbdd4857cd6630fb"
+            "certificate_hash": "490fa6942d6111a2f9c1228f0ee6e14d82dd16d8"
           }
         },
         {

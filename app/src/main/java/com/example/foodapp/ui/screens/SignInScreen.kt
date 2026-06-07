@@ -21,10 +21,25 @@ import androidx.compose.ui.unit.dp
 import com.example.foodapp.domain.validation.AuthValidator
 import com.example.foodapp.theme.VAL_BACKGROUND
 import com.example.foodapp.theme.VAL_BRAND_ON_PRIMARY
+import androidx.compose.ui.graphics.Color
 import com.example.foodapp.theme.VAL_BRAND_PRIMARY
 import com.example.foodapp.theme.VAL_SURFACE_DARK
 import com.example.foodapp.ui.state.AuthState
 import com.example.foodapp.ui.state.AuthViewModel
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.GoogleAuthProvider
+import com.ahad.foodapp.R
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import com.example.foodapp.ui.components.ExpressiveFullScreenLoader
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -32,6 +47,7 @@ fun SignInScreen(
     authViewModel: AuthViewModel,
     onAuthSuccess: () -> Unit,
     onNavigateToOtp: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -44,6 +60,19 @@ fun SignInScreen(
     var password by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf<String?>(null) }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+            authViewModel.handleGoogleSignInResult(credential)
+        } catch (e: Exception) {
+            validationError = "Google Sign-In failed"
+        }
+    }
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Authenticated) {
@@ -82,18 +111,18 @@ fun SignInScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (authState is AuthState.Loading) {
-            CircularProgressIndicator(color = VAL_BRAND_PRIMARY, modifier = Modifier.padding(16.dp))
-        } else {
-            if (validationError != null || authState is AuthState.Error) {
-                val errorMsg = validationError ?: (authState as AuthState.Error).message
-                Text(
-                    text = errorMsg,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                )
-            }
+        AnimatedVisibility(
+            visible = validationError != null || authState is AuthState.Error,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            val errorMsg = validationError ?: (authState as? AuthState.Error)?.message ?: ""
+            Text(
+                text = errorMsg,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            )
         }
 
         AnimatedContent(
@@ -102,15 +131,17 @@ fun SignInScreen(
         ) { isPhone ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (isPhone) {
-                    OutlinedTextField(
+                    TextField(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
                         label = { Text("Phone Number") },
                         placeholder = { Text("+1234567890") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VAL_BRAND_PRIMARY,
-                            focusedLabelColor = VAL_BRAND_PRIMARY
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = VAL_BRAND_PRIMARY,
+                            focusedLabelColor = VAL_BRAND_PRIMARY,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent
                         ),
                         singleLine = true
                     )
@@ -131,26 +162,30 @@ fun SignInScreen(
                         Text("Send Verification Code", color = VAL_BRAND_ON_PRIMARY)
                     }
                 } else {
-                    OutlinedTextField(
+                    TextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email Address") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VAL_BRAND_PRIMARY,
-                            focusedLabelColor = VAL_BRAND_PRIMARY
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = VAL_BRAND_PRIMARY,
+                            focusedLabelColor = VAL_BRAND_PRIMARY,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent
                         ),
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
+                    TextField(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Password") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VAL_BRAND_PRIMARY,
-                            focusedLabelColor = VAL_BRAND_PRIMARY
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = VAL_BRAND_PRIMARY,
+                            focusedLabelColor = VAL_BRAND_PRIMARY,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent
                         ),
                         singleLine = true
                     )
@@ -159,14 +194,15 @@ fun SignInScreen(
                         text = "Forgot Password?",
                         color = VAL_BRAND_PRIMARY,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth().clickable { /* TODO */ },
+                        modifier = Modifier.fillMaxWidth().clickable { onNavigateToForgotPassword() },
                         textAlign = TextAlign.End
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = {
-                            if (!AuthValidator.isValidEmail(email)) {
-                                validationError = "Please enter a valid email."
+                            val error = authViewModel.validateSignIn(email, password)
+                            if (error != null) {
+                                validationError = error
                                 return@Button
                             }
                             authViewModel.signInWithEmail(email, password)
@@ -186,5 +222,26 @@ fun SignInScreen(
         TextButton(onClick = { usePhoneAuth = !usePhoneAuth }) {
             Text(if (usePhoneAuth) "Use Email Instead" else "Use Phone Number Instead", color = VAL_SURFACE_DARK)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedButton(
+            onClick = {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+                val client = GoogleSignIn.getClient(context, gso)
+                googleSignInLauncher.launch(client.signInIntent)
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = VAL_SURFACE_DARK)
+        ) {
+            Text("Continue with Google")
+        }
+    }
+
+    if (authState is AuthState.Loading) {
+        ExpressiveFullScreenLoader(message = "Verifying Credentials...")
     }
 }

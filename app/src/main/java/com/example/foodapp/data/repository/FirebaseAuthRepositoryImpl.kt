@@ -108,6 +108,15 @@ class FirebaseAuthRepositoryImpl : AuthRepository {
         auth.signOut()
     }
 
+    override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override fun getCurrentUser(): UserProfile? {
         val user = auth.currentUser ?: return null
         return UserProfile(

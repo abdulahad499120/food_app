@@ -21,5 +21,7 @@ interface AuthRepository {
     
     fun logout()
     
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
+    
     fun getCurrentUser(): UserProfile?
 }

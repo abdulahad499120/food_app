@@ -10,5 +10,6 @@ data class CheckoutUiState(
     val address: Address = Address(),
     val paymentMethod: String = "Cash on Delivery",
     val status: CheckoutStatus = CheckoutStatus.Idle,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val placedOrderId: String? = null
 )

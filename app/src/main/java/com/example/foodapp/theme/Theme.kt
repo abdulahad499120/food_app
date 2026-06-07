@@ -16,14 +16,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandPrimary,
+    primary = VAL_BRAND_PRIMARY,
     secondary = BrandSecondary,
-    tertiary = BrandPrimary,
-    background = BgMain,
+    tertiary = VAL_BRAND_PRIMARY,
+    background = VAL_BACKGROUND,
     surface = SurfaceWhite,
-    onPrimary = SurfaceWhite,
+    onPrimary = VAL_BRAND_ON_PRIMARY,
     onSecondary = SurfaceWhite,
-    onTertiary = SurfaceWhite,
+    onTertiary = VAL_BRAND_ON_PRIMARY,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
     surfaceVariant = SurfaceWhite,
@@ -33,14 +33,14 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = BrandPrimary,
+    primary = VAL_BRAND_PRIMARY,
     secondary = BrandSecondary,
-    tertiary = BrandPrimary,
-    background = TextPrimary, // Flipped for dark mode
-    surface = TextPrimary,
-    onPrimary = SurfaceWhite,
+    tertiary = VAL_BRAND_PRIMARY,
+    background = VAL_SURFACE_DARK,
+    surface = VAL_SURFACE_DARK,
+    onPrimary = VAL_BRAND_ON_PRIMARY,
     onSecondary = SurfaceWhite,
-    onTertiary = SurfaceWhite,
+    onTertiary = VAL_BRAND_ON_PRIMARY,
     onBackground = SurfaceWhite,
     onSurface = SurfaceWhite,
     surfaceVariant = TextPrimary,

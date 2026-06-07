@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.File
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -14,12 +17,31 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
+        if (localPropsFile.exists()) {
+            localProps.load(localPropsFile.inputStream())
+        }
+        val mapboxAccessToken = localProps.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
+        resValue("string", "mapbox_access_token", mapboxAccessToken)
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = "password"
+            keyAlias = "release"
+            keyPassword = "password"
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -31,6 +53,7 @@ android {
       aidl = false
       buildConfig = false
       shaders = false
+      resValues = true
     }
 
     packaging {
@@ -64,7 +87,10 @@ dependencies {
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui.text.google.fonts)
   implementation("androidx.compose.material:material-icons-extended")
-  implementation("io.coil-kt:coil-compose:2.6.0")
+  implementation("io.coil-kt:coil-compose:2.5.0")
+    
+  // DataStore for Preferences
+  implementation("androidx.datastore:datastore-preferences:1.0.0")
   implementation(libs.kotlinx.serialization.json)
   implementation("androidx.navigation:navigation-compose:2.7.7")
 
@@ -73,6 +99,7 @@ dependencies {
   implementation("com.google.firebase:firebase-auth")
   implementation("com.google.firebase:firebase-firestore")
   implementation("com.google.android.gms:play-services-auth:21.0.0")
+  implementation("com.google.android.gms:play-services-location:21.2.0")
   
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
@@ -83,6 +110,8 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation("io.appium:java-client:9.2.2")
+  testImplementation("org.seleniumhq.selenium:selenium-java:4.20.0")
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
@@ -94,4 +123,8 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+  // Mapbox Maps SDK & Compose Extension
+  implementation("com.mapbox.maps:android:11.24.3")
+  implementation("com.mapbox.extension:maps-compose:11.24.3")
 }

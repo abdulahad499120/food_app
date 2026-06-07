@@ -32,18 +32,24 @@ fun CheckoutScreen(
     viewModel: CheckoutViewModel = viewModel(),
     authState: AuthState = AuthState.Unauthenticated,
     onNavigateBack: () -> Unit,
-    onOrderSuccess: () -> Unit,
+    onNavigateToAddressList: () -> Unit,
+    onOrderSuccess: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val cartState by CartManager.cartState.collectAsState()
-    
-    var showAddressSheet by remember { mutableStateOf(false) }
+
+    val user = (authState as? AuthState.Authenticated)?.user
+    LaunchedEffect(user) {
+        viewModel.initialize(user?.uid)
+    }
 
     LaunchedEffect(uiState.status) {
         if (uiState.status == CheckoutStatus.Success) {
-            onOrderSuccess()
-            viewModel.resetState()
+            uiState.placedOrderId?.let { orderId ->
+                onOrderSuccess(orderId)
+                viewModel.resetState()
+            }
         }
     }
 
@@ -133,13 +139,25 @@ fun CheckoutScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         if (uiState.address.isComplete) {
-                            Text(text = uiState.address.houseNo, style = MaterialTheme.typography.bodyMedium)
-                            Text(text = "${uiState.address.street}, ${uiState.address.area}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = uiState.address.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                if (uiState.address.isDefault) {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Surface(color = BrandPrimary.copy(alpha = 0.1f), shape = MaterialTheme.shapes.small) {
+                                        Text("Default", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(text = uiState.address.streetAddress, style = MaterialTheme.typography.bodyMedium)
+                            if (uiState.address.deliveryInstructions.isNotBlank()) {
+                                Text(text = "Note: ${uiState.address.deliveryInstructions}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            }
                         } else {
                             Text(text = "No address selected", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                         }
                     }
-                    TextButton(onClick = { showAddressSheet = true }) {
+                    TextButton(onClick = onNavigateToAddressList) {
                         Text("Edit", color = BrandPrimary)
                     }
                 }
@@ -227,82 +245,5 @@ fun CheckoutScreen(
             }
         }
 
-        if (showAddressSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showAddressSheet = false }
-            ) {
-                AddressInputSheet(
-                    initialAddress = uiState.address,
-                    onSave = { house, street, area ->
-                        viewModel.updateAddress(house, street, area)
-                        showAddressSheet = false
-                    },
-                    onCancel = { showAddressSheet = false }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun AddressInputSheet(
-    initialAddress: com.example.foodapp.data.models.Address,
-    onSave: (String, String, String) -> Unit,
-    onCancel: () -> Unit
-) {
-    var houseNo by remember { mutableStateOf(initialAddress.houseNo) }
-    var street by remember { mutableStateOf(initialAddress.street) }
-    var area by remember { mutableStateOf(initialAddress.area) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Enter Delivery Address",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
-        TextInput(
-            label = "House/Flat No.",
-            value = houseNo,
-            onValueChange = { houseNo = it },
-            placeholder = "e.g. 12B"
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        TextInput(
-            label = "Street",
-            value = street,
-            onValueChange = { street = it },
-            placeholder = "e.g. Main Boulevard"
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        TextInput(
-            label = "Area",
-            value = area,
-            onValueChange = { area = it },
-            placeholder = "e.g. DHA Phase 6"
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            TextButton(onClick = onCancel) {
-                Text("Cancel")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            PrimaryButton(
-                onClick = { onSave(houseNo, street, area) },
-                enabled = houseNo.isNotBlank() && street.isNotBlank() && area.isNotBlank()
-            ) {
-                Text("Save Address")
-            }
-        }
-        Spacer(modifier = Modifier.height(32.dp)) // padding for bottom navigation inset
     }
 }

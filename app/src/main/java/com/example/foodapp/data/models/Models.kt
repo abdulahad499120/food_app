@@ -3,32 +3,71 @@ package com.example.foodapp.data.models
 import kotlinx.serialization.Serializable
 import java.util.Date
 import com.google.firebase.firestore.ServerTimestamp
+import com.google.firebase.firestore.GeoPoint
+
+// ---- Firestore Models ----
+
+data class FirestoreProduct(
+    val productId: String = "",
+    val name: String = "",
+    val description: String = "",
+    val basePrice: Double = 0.0,
+    val categoryId: String = "",
+    val imageUrl: String = "",
+    val requiresCustomization: Boolean = false,
+    val baseCalories: Int = 0,
+    val largeCalorieBonus: Int = 0,
+    val ingredientCalorieMap: Map<String, Int> = emptyMap()
+)
+
+data class Branch(
+    val branchId: String = "",
+    val name: String = "",
+    val location: GeoPoint? = null,
+    val isOpen: Boolean = true,
+    val status: String = "OPEN",
+    val operatingHours: String = "",
+    val address: String = ""
+)
+
+data class InventoryOverride(
+    // The document ID in Firestore is the productId
+    @field:JvmField
+    val isAvailable: Boolean = true,
+    val priceOverride: Double? = null
+)
+
+// ---- Domain / UI Models ----
 
 @Serializable
 data class Brand(
-    val name: String,
-    val logo: String,
-    val rating: Double,
-    val minimum_order: Int
+    val name: String = "",
+    val logo: String = "",
+    val rating: Double = 0.0,
+    val minimum_order: Int = 0
 )
 
 @Serializable
 data class Category(
-    val id: Long,
-    val name: String
+    val id: String = "",
+    val name: String = ""
 )
 
 @Serializable
 data class Product(
-    val id: Long,
-    val category_id: Long,
-    val category_name: String,
-    val name: String,
-    val description: String,
-    val price: Double,
-    val image: String
+    val id: String = "",
+    val category_id: String = "",
+    val category_name: String = "",
+    val name: String = "",
+    val description: String = "",
+    val price: Double = 0.0,
+    val image: String = "",
+    val isAvailable: Boolean = true,
+    val requiresCustomization: Boolean = false,
+    val baseCalories: Int = 0,
+    val largeCalorieBonus: Int = 0,
+    val ingredientCalorieMap: Map<String, Int> = emptyMap()
 ) {
-    // Helper to compute local asset path from the name and id
     val localImagePath: String
         get() {
             val sanitizedName = name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
@@ -38,28 +77,46 @@ data class Product(
 
 @Serializable
 data class RestaurantData(
-    val brand: Brand,
-    val categories: List<Category>,
-    val products: List<Product>
+    val brand: Brand = Brand(),
+    val categories: List<Category> = emptyList(),
+    val products: List<Product> = emptyList()
 )
 
 data class Address(
-    val houseNo: String = "",
-    val street: String = "",
-    val area: String = ""
+    val id: String = "",
+    val label: String = "Home",
+    val streetAddress: String = "",
+    val city: String = "",
+    val postalCode: String = "",
+    val phoneNumber: String = "",
+    val deliveryInstructions: String = "",
+    val location: GeoPoint? = null,
+    val isDefault: Boolean = false
 ) {
     val isComplete: Boolean
-        get() = houseNo.isNotBlank() && street.isNotBlank() && area.isNotBlank()
+        get() = streetAddress.isNotBlank()
         
     override fun toString(): String {
-        return if (isComplete) "$houseNo, $street, $area" else "Incomplete Address"
+        return streetAddress.ifBlank { "Incomplete Address" }
     }
 }
 
 data class CartItem(
-    val product: Product = Product(0, 0, "", "", "", 0.0, ""),
-    val quantity: Int = 0
+    val product: Product = Product(),
+    val quantity: Int = 0,
+    val size: String = "Regular", // Default to Regular
+    val sweetness: Int = 2,
+    val extraToppings: Int = 0,
+    val nutType: String = "Mixed Nuts",
+    val scoops: Int = 2
 )
+
+enum class OrderStatus {
+    PENDING,
+    PREPARING,
+    OUT_FOR_DELIVERY,
+    DELIVERED
+}
 
 data class Order(
     val orderId: String = "",
@@ -70,14 +127,51 @@ data class Order(
     val subtotal: Double = 0.0,
     val deliveryFee: Double = 0.0,
     val totalAmount: Double = 0.0,
-    val status: String = "Pending",
+    val orderStatus: OrderStatus = OrderStatus.PENDING,
+    val branchLocation: GeoPoint? = null,
+    val deliveryLocation: GeoPoint? = null,
+    val rating: Int? = null,
+    val reviewText: String? = null,
     @ServerTimestamp val timestamp: Date? = null
 )
 
 data class UserProfile(
-    val uid: String,
-    val name: String,
+    val uid: String = "",
+    val name: String = "",
     val email: String? = null,
     val phoneNumber: String? = null,
-    val branchId: String? = null
+    val branchId: String? = null,
+    val starsBalance: Int = 0,
+    val loyaltyTier: String = "Green"
+)
+
+data class StarHistory(
+    val id: String = "",
+    val orderId: String = "",
+    val starsEarned: Int = 0,
+    @ServerTimestamp val timestamp: Date? = null
+)
+
+data class RedemptionItem(
+    val id: String = "",
+    val itemName: String = "",
+    val iconUrl: String = "",
+    val costInStars: Int = 0
+)
+
+data class eGift(
+    val id: String = "",
+    val senderId: String = "",
+    val recipientName: String = "",
+    val recipientEmail: String = "",
+    val amount: Int = 0,
+    val message: String = "",
+    val designTemplateId: String = "",
+    val status: String = "Sent"
+)
+
+data class GiftTemplate(
+    val templateId: String = "",
+    val imageUrl: String = "",
+    val category: String = ""
 )

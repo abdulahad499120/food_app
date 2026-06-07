@@ -12,17 +12,31 @@ import com.example.foodapp.data.models.Order
 import com.example.foodapp.data.repository.OrderRepository
 import com.example.foodapp.ui.state.AuthState
 import com.example.foodapp.data.models.Address
+import com.example.foodapp.data.repository.AddressRepository
 
 class CheckoutViewModel : ViewModel() {
     private val orderRepository = OrderRepository()
+    private val addressRepository = AddressRepository()
     
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
-    fun updateAddress(houseNo: String, street: String, area: String) {
+    fun initialize(userId: String?) {
+        if (userId == null) return
+        viewModelScope.launch {
+            addressRepository.getUserAddresses(userId).collect { addresses ->
+                val defaultAddress = addresses.find { it.isDefault } ?: addresses.firstOrNull()
+                if (defaultAddress != null) {
+                    _uiState.update { it.copy(address = defaultAddress, errorMessage = null) }
+                }
+            }
+        }
+    }
+
+    fun updateAddress(address: Address) {
         _uiState.update { state ->
             state.copy(
-                address = Address(houseNo, street, area),
+                address = address,
                 errorMessage = null
             )
         }
@@ -56,13 +70,13 @@ class CheckoutViewModel : ViewModel() {
                 subtotal = cartState.subtotal,
                 deliveryFee = cartState.deliveryFee,
                 totalAmount = cartState.total,
-                status = "Pending"
+                orderStatus = com.example.foodapp.data.models.OrderStatus.PENDING
             )
             
             orderRepository.placeOrder(order).fold(
-                onSuccess = {
+                onSuccess = { orderId ->
                     CartManager.clearCart()
-                    _uiState.update { state -> state.copy(status = CheckoutStatus.Success) }
+                    _uiState.update { state -> state.copy(status = CheckoutStatus.Success, placedOrderId = orderId) }
                 },
                 onFailure = { exception ->
                     _uiState.update { state -> state.copy(status = CheckoutStatus.Error, errorMessage = exception.message ?: "Failed to place order") }

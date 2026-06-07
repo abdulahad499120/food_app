@@ -11,7 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,11 +39,12 @@ fun ProductGridItem(
     title: String,
     price: Double,
     onClick: () -> Unit,
+    onAddClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
-            .width(160.dp)
+            .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(8.dp)
     ) {
@@ -46,16 +52,44 @@ fun ProductGridItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(160.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(DividerColor)
         ) {
-            if (imageUrl != null) {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = title,
-                    modifier = Modifier.fillMaxWidth().height(160.dp),
-                    contentScale = ContentScale.Crop
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(DividerColor)
+            ) {
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = title,
+                        modifier = Modifier.fillMaxWidth().height(160.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+            
+            // Floating Action Container (Quick-Add)
+            Surface(
+                shape = CircleShape,
+                color = androidx.compose.ui.graphics.Color.White,
+                shadowElevation = 4.dp,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(36.dp)
+                    .minimumInteractiveComponentSize()
+                    .clickable(onClick = onAddClick)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Quick Add",
+                        tint = com.example.foodapp.theme.VAL_BRAND_PRIMARY,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.height(12.dp))

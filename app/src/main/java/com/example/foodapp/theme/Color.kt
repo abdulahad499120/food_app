@@ -2,7 +2,7 @@ package com.example.foodapp.theme
 
 import androidx.compose.ui.graphics.Color
 
-val BrandPrimary = Color(0xFF008080)
+val BrandPrimary = Color(0xFFE91E63)
 val BrandSecondary = Color(0xFF9B51E0)
 val BgMain = Color(0xFFFAFAFA)
 val SurfaceWhite = Color(0xFFFFFFFF)
@@ -12,7 +12,7 @@ val DividerColor = Color(0xFFE5E7EB)
 val ErrorRed = Color(0xFFEF4444)
 
 // New Custom Brand Tokens
-val VAL_BRAND_PRIMARY = Color(0xFFD6007A) // Vibrant Pinkish Red
+val VAL_BRAND_PRIMARY = Color(0xFFE91E63) // Pinkish Red (Brand Primary)
 val VAL_BRAND_ON_PRIMARY = Color(0xFFFFFFFF) // Pure White
 val VAL_BACKGROUND = Color(0xFFFBFBFB) // Crisp light-mode background
 val VAL_SURFACE_DARK = Color(0xFF1A1A1A) // Off-black accent

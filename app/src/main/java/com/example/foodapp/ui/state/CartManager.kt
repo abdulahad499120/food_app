@@ -19,28 +19,64 @@ object CartManager {
     private val _cartState = MutableStateFlow(CartState())
     val cartState: StateFlow<CartState> = _cartState.asStateFlow()
 
-    fun addItem(product: Product, quantity: Int = 1) {
+    fun addItem(item: CartItem) {
         _cartState.update { state ->
-            val existingItem = state.items.find { it.product.id == product.id }
+            // Match exactly on product ID AND all customizations
+            val existingItem = state.items.find { 
+                it.product.id == item.product.id &&
+                it.size == item.size &&
+                it.sweetness == item.sweetness &&
+                it.extraToppings == item.extraToppings &&
+                it.nutType == item.nutType &&
+                it.scoops == item.scoops
+            }
             val newItems = if (existingItem != null) {
                 state.items.map {
-                    if (it.product.id == product.id) it.copy(quantity = it.quantity + quantity) else it
+                    if (it === existingItem) it.copy(quantity = it.quantity + item.quantity) else it
                 }
             } else {
-                state.items + CartItem(product, quantity)
+                state.items + item
             }
             recalculate(state.copy(items = newItems))
         }
     }
 
-    fun removeItem(productId: Long) {
+    // For backwards compatibility where no customization is specified
+    fun addItem(product: Product, quantity: Int = 1) {
+        addItem(CartItem(product = product, quantity = quantity))
+    }
+
+    // Remove needs to use an exact index or instance now since product ID is no longer unique
+    fun removeItem(item: CartItem) {
+        _cartState.update { state ->
+            val newItems = state.items.filter { it !== item }
+            recalculate(state.copy(items = newItems))
+        }
+    }
+
+    // Temporarily keep productId remove for backward compatibility, removing all instances of that product
+    fun removeItem(productId: String) {
         _cartState.update { state ->
             val newItems = state.items.filter { it.product.id != productId }
             recalculate(state.copy(items = newItems))
         }
     }
 
-    fun updateQuantity(productId: Long, newQuantity: Int) {
+    fun updateQuantity(item: CartItem, newQuantity: Int) {
+        if (newQuantity <= 0) {
+            removeItem(item)
+            return
+        }
+        _cartState.update { state ->
+            val newItems = state.items.map {
+                if (it === item) it.copy(quantity = newQuantity) else it
+            }
+            recalculate(state.copy(items = newItems))
+        }
+    }
+
+    // Temporarily keep productId update for backward compatibility
+    fun updateQuantity(productId: String, newQuantity: Int) {
         if (newQuantity <= 0) {
             removeItem(productId)
             return
@@ -54,7 +90,16 @@ object CartManager {
     }
 
     private fun recalculate(state: CartState): CartState {
-        val subtotal = state.items.sumOf { it.product.price * it.quantity }
+        val subtotal = state.items.sumOf { item ->
+            // Calculate item price including customizations
+            val basePrice = item.product.price
+            val sizeBump = if (item.size == "Large" || item.size == "Family") 100.0 else 0.0
+            val toppingsBump = item.extraToppings * 20.0
+            val scoopsBump = if (item.scoops > 2) (item.scoops - 2) * 50.0 else 0.0
+            
+            val finalItemPrice = basePrice + sizeBump + toppingsBump + scoopsBump
+            finalItemPrice * item.quantity
+        }
         val total = if (state.items.isEmpty()) 0.0 else subtotal + state.deliveryFee
         return state.copy(
             subtotal = subtotal,

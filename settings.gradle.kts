@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.File
+
 pluginManagement {
     repositories {
         google {
@@ -5,6 +8,7 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("org\\.chromium.*")
             }
         }
         mavenCentral()
@@ -19,9 +23,25 @@ dependencyResolutionManagement {
                 includeGroupByRegex("androidx.*")
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("org\\.chromium.*")
             }
         }
         mavenCentral()
+        maven {
+            url = uri("https://api.mapbox.com/downloads/v2/releases/maven")
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+            credentials {
+                username = "mapbox"
+                val localProps = Properties()
+                val localPropsFile = File(rootDir, "local.properties")
+                if (localPropsFile.exists()) {
+                    localProps.load(localPropsFile.inputStream())
+                }
+                password = localProps.getProperty("MAPBOX_DOWNLOADS_TOKEN") ?: System.getenv("MAPBOX_DOWNLOADS_TOKEN") ?: ""
+            }
+        }
     }
 }
 

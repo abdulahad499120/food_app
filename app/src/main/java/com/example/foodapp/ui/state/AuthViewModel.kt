@@ -118,9 +118,50 @@ class AuthViewModel : ViewModel() {
         _authState.value = AuthState.Unauthenticated
     }
     
+    fun sendPasswordResetEmail(email: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = repository.sendPasswordResetEmail(email)
+            onResult(result)
+        }
+    }
+    
     fun resetError() {
         if (_authState.value is AuthState.Error) {
             _authState.value = AuthState.Unauthenticated
         }
+    }
+
+    fun validateSignIn(email: String, password: String): String? {
+        val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$".toRegex()
+        if (!email.matches(emailRegex)) {
+            return "Invalid email format"
+        }
+        if (password.trim().isEmpty()) {
+            return "Password cannot be empty"
+        }
+        return null
+    }
+
+    fun validateSignUp(name: String, email: String, password: String): String? {
+        if (name.trim().isEmpty() || !name.matches(Regex("^[a-zA-Z\\s]+$"))) {
+            return "Full name must contain only letters and spaces"
+        }
+        val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$".toRegex()
+        if (!email.matches(emailRegex)) {
+            return "Invalid email format"
+        }
+        if (password.length < 8) {
+            return "Password must be at least 8 characters"
+        }
+        if (!password.matches(Regex(".*[A-Z].*"))) {
+            return "Password must contain at least one uppercase letter"
+        }
+        if (!password.matches(Regex(".*[a-z].*"))) {
+            return "Password must contain at least one lowercase letter"
+        }
+        if (!password.matches(Regex(".*[0-9].*"))) {
+            return "Password must contain at least one number"
+        }
+        return null
     }
 }
