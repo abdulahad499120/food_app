@@ -34,7 +34,6 @@ class BranchLocatorViewModel : ViewModel() {
     val mapCameraEvents: SharedFlow<Point> = _mapCameraEvents.asSharedFlow()
 
     init {
-        repository.seedPhase5Branches() // Force seed the branches for testing
         fetchBranches()
     }
 
