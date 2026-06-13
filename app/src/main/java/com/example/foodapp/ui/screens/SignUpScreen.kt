@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -41,13 +43,14 @@ fun SignUpScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val authState by authViewModel.authState.collectAsState()
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
     
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var validationError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+    val webClientId = androidx.compose.ui.res.stringResource(id = R.string.default_web_client_id)
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -195,7 +198,7 @@ fun SignUpScreen(
         OutlinedButton(
             onClick = {
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestIdToken(webClientId)
                     .requestEmail()
                     .build()
                 val client = GoogleSignIn.getClient(context, gso)

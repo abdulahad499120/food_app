@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,7 +43,7 @@ fun AddressListScreen(
     onAddressSelected: (Address) -> Unit, // Useful if called from Checkout
     viewModel: AddressViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val user = (authState as? AuthState.Authenticated)?.user
 
     LaunchedEffect(user) {
@@ -106,9 +108,13 @@ fun AddressListScreen(
                             modifier = Modifier.align(Alignment.Center),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(64.dp))
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("No saved addresses", style = MaterialTheme.typography.titleMedium, color = TextSecondary)
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.ahad.foodapp.R.drawable.delivery_intercept_illustration),
+                                contentDescription = "Delivery Route",
+                                modifier = Modifier.size(160.dp).padding(bottom = 16.dp),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                            )
+                            Text("No saved delivery addresses", style = MaterialTheme.typography.titleMedium, color = TextSecondary)
                         }
                     } else {
                         LazyColumn(

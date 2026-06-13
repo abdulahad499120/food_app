@@ -13,6 +13,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import com.example.foodapp.theme.BrandPrimary
 import com.example.foodapp.theme.SurfaceWhite
 import com.example.foodapp.theme.TextPrimary
@@ -20,7 +23,8 @@ import com.example.foodapp.theme.TextSecondary
 
 @Composable
 fun EmptyStateView(
-    icon: ImageVector,
+    icon: ImageVector? = null,
+    iconId: Int? = null,
     title: String,
     message: String,
     actionText: String? = null,
@@ -35,12 +39,21 @@ fun EmptyStateView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            modifier = Modifier.size(80.dp),
-            tint = TextSecondary.copy(alpha = 0.5f)
-        )
+        if (iconId != null) {
+            Image(
+                painter = painterResource(id = iconId),
+                contentDescription = title,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(160.dp).padding(bottom = 16.dp)
+            )
+        } else if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier.size(80.dp),
+                tint = TextSecondary.copy(alpha = 0.5f)
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         
@@ -114,6 +127,45 @@ fun ErrorStateView(
         
         PrimaryButton(onClick = onRetry) {
             Text("Tap to Retry")
+        }
+    }
+}
+
+@Composable
+fun PremiumErrorBanner(
+    errorMessage: String,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.animation.AnimatedVisibility(
+        visible = isVisible,
+        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                )
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Error",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
     }
 }

@@ -197,16 +197,19 @@ class RestaurantRepository {
                 "id" to "branch_pia",
                 "name" to "Iceland PIA Main Boulevard",
                 "location" to com.google.firebase.firestore.GeoPoint(31.4550, 74.2900),
+                "status" to "OPEN",
+                "operatingHours" to "Open 24 hours (Testing)",
+                "address" to "PIA Main Boulevard, Lahore",
                 "isOpen" to true
             ),
             mapOf(
                 "id" to "branch_faisal_town",
                 "name" to "ICE LAND (Faisal Town)",
-                "location" to com.google.firebase.firestore.GeoPoint(31.4815, 74.3030),
-                "status" to "TEMPORARILY_CLOSED",
-                "operatingHours" to "Temporarily closed",
-                "address" to "Faisal, F895+M7P Building No 17 block D Faisal town",
-                "isOpen" to false
+                "location" to com.google.firebase.firestore.GeoPoint(31.4764, 74.3051),
+                "status" to "OPEN",
+                "operatingHours" to "Open 24 hours (Testing)",
+                "address" to "17-D, Near Akbar Chowk, Faisal Town",
+                "isOpen" to true
             ),
             mapOf(
                 "id" to "branch_gulberg",
@@ -242,6 +245,33 @@ class RestaurantRepository {
                 "status" to "OPEN",
                 "operatingHours" to "11:00 AM - 12:00 AM",
                 "address" to "Zarrar Shaheed Road, Lahore",
+                "isOpen" to true
+            ),
+            mapOf(
+                "id" to "branch_bahria_town",
+                "name" to "Iceland Bahria Town",
+                "location" to com.google.firebase.firestore.GeoPoint(31.3683, 74.1855),
+                "status" to "OPEN",
+                "operatingHours" to "Open 24 hours (Testing)",
+                "address" to "Shop 66–67, Commercial Zone, Sector C, Bahria Town",
+                "isOpen" to true
+            ),
+            mapOf(
+                "id" to "branch_dha_phase_1",
+                "name" to "Iceland DHA Phase 1",
+                "location" to com.google.firebase.firestore.GeoPoint(31.4700, 74.3980),
+                "status" to "OPEN",
+                "operatingHours" to "Open 24 hours (Testing)",
+                "address" to "26 Street 21, DHA Phase 1",
+                "isOpen" to true
+            ),
+            mapOf(
+                "id" to "branch_adda_plot",
+                "name" to "Iceland Adda Plot",
+                "location" to com.google.firebase.firestore.GeoPoint(31.3200, 74.2000),
+                "status" to "OPEN",
+                "operatingHours" to "Open 24 hours (Testing)",
+                "address" to "Adda Plot Roundabout, Raiwind Road, Lahore",
                 "isOpen" to true
             )
         )

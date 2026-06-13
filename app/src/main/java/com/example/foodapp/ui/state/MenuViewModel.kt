@@ -24,9 +24,15 @@ sealed class MenuUiState {
         val categories: List<Category>,
         val allProducts: List<Product>,
         val filteredProducts: List<Product>,
-        val selectedCategoryId: String?
+        val selectedCategoryId: String?,
+        val activeDeliveryAddress: com.example.foodapp.data.models.Address?
     ) : MenuUiState()
     data class Error(val message: String) : MenuUiState()
+}
+
+enum class OrderFlowState {
+    PICKUP,
+    DELIVERY
 }
 
 class MenuViewModel(application: Application) : AndroidViewModel(application) {
@@ -41,8 +47,18 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
     
     private val _selectedCategoryId = MutableStateFlow<String?>(null)
 
+    private val _orderFlowState = MutableStateFlow(OrderFlowState.PICKUP)
+    val orderFlowState: StateFlow<OrderFlowState> = _orderFlowState.asStateFlow()
+
+    private val _activeDeliveryAddress = MutableStateFlow<com.example.foodapp.data.models.Address?>(null)
+    val activeDeliveryAddress: StateFlow<com.example.foodapp.data.models.Address?> = _activeDeliveryAddress.asStateFlow()
+
     private var activeJob: Job? = null
     private var currentBranchId: String? = null
+
+    fun setActiveDeliveryAddress(address: com.example.foodapp.data.models.Address?) {
+        _activeDeliveryAddress.value = address
+    }
 
     init {
         viewModelScope.launch {
@@ -58,6 +74,11 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setOrderFlowState(state: OrderFlowState) {
+        _orderFlowState.value = state
+        CartManager.setOrderFlowState(state)
     }
 
     // Fallback for UI that calls loadData directly
@@ -87,12 +108,21 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                     repository.observeMenuForBranch(branchId),
                     repository.observeBranch(branchId),
                     _searchQuery,
-                    _selectedCategoryId
-                ) { data, branch, query, currentCategoryId ->
-                    val filteredBySearch = if (query.isBlank()) {
-                        data.products
+                    _selectedCategoryId,
+                    combine(_orderFlowState, _activeDeliveryAddress) { flowState, address -> Pair(flowState, address) }
+                ) { data, branch, query, currentCategoryId, flowStateAddressPair ->
+                    val (flowState, activeAddress) = flowStateAddressPair
+                    
+                    val flowFilteredProducts = if (flowState == OrderFlowState.DELIVERY) {
+                        data.products.filter { it.isDeliverable }
                     } else {
-                        data.products.filter {
+                        data.products
+                    }
+                    
+                    val filteredBySearch = if (query.isBlank()) {
+                        flowFilteredProducts
+                    } else {
+                        flowFilteredProducts.filter {
                             it.name.contains(query, ignoreCase = true) ||
                             it.description.contains(query, ignoreCase = true)
                         }
@@ -116,9 +146,10 @@ class MenuViewModel(application: Application) : AndroidViewModel(application) {
                         brandName = data.brand.name,
                         brandLogo = data.brand.logo,
                         categories = visibleCategories,
-                        allProducts = data.products,
+                        allProducts = flowFilteredProducts,
                         filteredProducts = finalFiltered,
-                        selectedCategoryId = currentCategoryId
+                        selectedCategoryId = currentCategoryId,
+                        activeDeliveryAddress = activeAddress
                     )
                 }.collect { successState ->
                     _uiState.update { successState }

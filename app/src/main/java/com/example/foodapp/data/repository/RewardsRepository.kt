@@ -56,6 +56,17 @@ class RewardsRepository {
         awaitClose { listener.remove() }
     }
 
+    suspend fun updateUserStars(userId: String, starDelta: Int): Result<Unit> {
+        return try {
+            val userRef = firestore.collection("users").document(userId)
+            userRef.update("starsBalance", com.google.firebase.firestore.FieldValue.increment(starDelta.toLong())).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("RewardsRepository", "Error updating user stars: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
     // Mocked redemption items since they aren't fully dynamic yet
     fun getRedemptionItems(): List<RedemptionItem> {
         return listOf(

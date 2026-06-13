@@ -42,43 +42,11 @@ fun StoreSelectionStrip(
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            // Pickup / Delivery Toggle
-            var isPickup by remember { mutableStateOf(true) }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color.LightGray.copy(alpha = 0.3f)
-                ) {
-                    Row(modifier = Modifier.padding(4.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(if (isPickup) SurfaceWhite else Color.Transparent)
-                                .clickable { isPickup = true }
-                                .padding(horizontal = 32.dp, vertical = 8.dp)
-                        ) {
-                            Text("Pickup", fontWeight = FontWeight.Bold, color = if (isPickup) TextPrimary else Color.Gray)
-                        }
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(if (!isPickup) SurfaceWhite else Color.Transparent)
-                                .clickable { isPickup = false }
-                                .padding(horizontal = 32.dp, vertical = 8.dp)
-                        ) {
-                            Text("Delivery", fontWeight = FontWeight.Bold, color = if (!isPickup) TextPrimary else Color.Gray)
-                        }
-                    }
-                }
-            }
-
             // Store Info & Cart
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
                     .clickable { onStoreClick() },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -88,11 +56,16 @@ fun StoreSelectionStrip(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
+                    val storeText = if (activeBranchName != null) {
+                        "$activeBranchName • 10-15 min"
+                    } else {
+                        "Choose a store"
+                    }
                     Text(
-                        text = activeBranchName ?: "Choose a store",
+                        text = storeText,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = if (activeBranchName != null) TextPrimary else BrandPrimary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(

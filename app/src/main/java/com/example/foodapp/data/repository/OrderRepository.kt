@@ -30,6 +30,15 @@ class OrderRepository {
         }
     }
 
+    suspend fun deleteOrder(orderId: String): Result<Unit> {
+        return try {
+            ordersCollection.document(orderId).delete().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     /**
      * Observes the user's past orders.
      * 

@@ -13,6 +13,10 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,7 +32,12 @@ import com.example.foodapp.theme.SurfaceWhite
 import com.example.foodapp.theme.TextPrimary
 import com.example.foodapp.theme.VAL_BRAND_PRIMARY
 import com.example.foodapp.theme.VAL_SURFACE_DARK
+import com.example.foodapp.ui.components.GiftRevealOverlay
 import com.example.foodapp.ui.state.AuthState
+import com.example.foodapp.ui.state.GiftViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
@@ -38,16 +47,21 @@ fun HomeScreen(
     onNavigateToLocator: () -> Unit = {},
     onNavigateToAuth: () -> Unit = {},
     onNavigateToOrder: () -> Unit = {},
-    onNavigateToCart: () -> Unit = {}
+    onNavigateToCart: () -> Unit = {},
+    giftViewModel: GiftViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
+    val pendingGifts by giftViewModel.pendingGifts.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SurfaceWhite)
-            .verticalScroll(scrollState)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SurfaceWhite)
+                .verticalScroll(scrollState)
+        ) {
         // Top App Bar Elements (Rendered inline for Home Hub)
         Row(
             modifier = Modifier
@@ -58,13 +72,14 @@ fun HomeScreen(
         ) {
             // Left: Sign In or Greeting
             if (authState is AuthState.Unauthenticated) {
-                Text(
-                    text = "Sign in",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = VAL_BRAND_PRIMARY,
-                    modifier = Modifier.clickable { onNavigateToAuth() }
-                )
+                TextButton(onClick = onNavigateToAuth) {
+                    Text(
+                        text = "Sign in",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = VAL_BRAND_PRIMARY
+                    )
+                }
             } else {
                 Text(
                     text = "Welcome, ${(authState as? AuthState.Authenticated)?.user?.name ?: "Member"}",
@@ -77,7 +92,7 @@ fun HomeScreen(
             // Center: Stores Pin
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onNavigateToLocator() }
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)).clickable { onNavigateToLocator() }.padding(8.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
@@ -95,28 +110,21 @@ fun HomeScreen(
             }
 
             // Right: Profile Avatar
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                .background(Color.LightGray.copy(alpha = 0.3f))
-                .clickable { onNavigateToCart() },
-            contentAlignment = Alignment.Center
-        ) {
-            BadgedBox(
-                badge = { 
-                    if (cartItemCount > 0) {
-                        Badge { Text(cartItemCount.toString()) }
-                    } 
+            IconButton(onClick = onNavigateToCart) {
+                BadgedBox(
+                    badge = { 
+                        if (cartItemCount > 0) {
+                            Badge { Text(cartItemCount.toString()) }
+                        } 
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Cart",
+                        tint = TextPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Cart",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
             }
         }
 
@@ -134,12 +142,13 @@ fun HomeScreen(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // In a real app this would be an Image. Using Box placeholder for now to match 1:1 structure.
-                Box(
+                Image(
+                    painter = painterResource(id = com.ahad.foodapp.R.drawable.home_hero_dessert),
+                    contentDescription = "Summer Dessert Collection",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.5f)
-                        .background(VAL_BRAND_PRIMARY.copy(alpha = 0.3f))
                 )
                 
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -224,5 +233,27 @@ fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(32.dp))
+    }
+
+    // Gift Reveal Overlay
+    GiftRevealOverlay(
+        pendingGift = pendingGifts.firstOrNull(),
+        onClaimGift = { gift ->
+            giftViewModel.claimGift(
+                gift = gift,
+                onSuccess = {
+                    scope.launch { snackbarHostState.showSnackbar("Added Rs. ${gift.amount.toInt()} to Wallet!") }
+                },
+                onError = {
+                    scope.launch { snackbarHostState.showSnackbar("Error claiming gift: ${it.message}") }
+                }
+            )
+        }
+    )
+    
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier.align(Alignment.BottomCenter)
+    )
     }
 }

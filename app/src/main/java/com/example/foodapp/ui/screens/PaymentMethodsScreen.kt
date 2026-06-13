@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,7 +41,7 @@ fun PaymentMethodsScreen(
     onNavigateToAddPayment: () -> Unit,
     viewModel: PaymentViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val user = (authState as? AuthState.Authenticated)?.user
 
     LaunchedEffect(user) {

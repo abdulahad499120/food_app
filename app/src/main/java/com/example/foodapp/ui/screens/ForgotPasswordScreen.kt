@@ -63,14 +63,14 @@ fun ForgotPasswordScreen(
         } else {
             if (validationError != null) {
                 Text(
-                    text = validationError!!,
+                    text = validationError ?: "",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
             } else if (successMessage != null) {
                 Text(
-                    text = successMessage!!,
+                    text = successMessage ?: "",
                     color = VAL_BRAND_PRIMARY,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,

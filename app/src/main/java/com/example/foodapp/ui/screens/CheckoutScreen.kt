@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,31 +31,38 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
-    viewModel: CheckoutViewModel = viewModel(),
-    authState: AuthState = AuthState.Unauthenticated,
     onNavigateBack: () -> Unit,
     onNavigateToAddressList: () -> Unit,
     onOrderSuccess: (String) -> Unit,
+    viewModel: CheckoutViewModel = viewModel(),
+    authState: AuthState = AuthState.Unauthenticated,
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val cartState by CartManager.cartState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val cartState by CartManager.cartState.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val user = (authState as? AuthState.Authenticated)?.user
     LaunchedEffect(user) {
         viewModel.initialize(user?.uid)
     }
 
+    var showSuccessAnimation by remember { mutableStateOf(false) }
+    var completedOrderId by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(uiState.status) {
         if (uiState.status == CheckoutStatus.Success) {
             uiState.placedOrderId?.let { orderId ->
-                onOrderSuccess(orderId)
+                completedOrderId = orderId
+                showSuccessAnimation = true
                 viewModel.resetState()
             }
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = { Text("Checkout", style = MaterialTheme.typography.titleLarge) },
@@ -77,27 +86,19 @@ fun CheckoutScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    if (uiState.status == CheckoutStatus.Error && uiState.errorMessage != null) {
-                        ErrorStateView(
-                            errorMessage = uiState.errorMessage ?: "Unknown error",
-                            onRetry = { viewModel.placeOrder(authState) },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
-                        )
-                    } else {
-                        PrimaryButton(
-                            onClick = { viewModel.placeOrder(authState) },
-                            modifier = Modifier.fillMaxWidth(),
-                            enabled = uiState.status != CheckoutStatus.Loading
-                        ) {
-                            if (uiState.status == CheckoutStatus.Loading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = SurfaceWhite,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(text = "Place Order • Rs. ${cartState.total.toInt()}")
-                            }
+                    PrimaryButton(
+                        onClick = { viewModel.placeOrder(authState, context) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = uiState.status != CheckoutStatus.Loading
+                    ) {
+                        if (uiState.status == CheckoutStatus.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = SurfaceWhite,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(text = "Place Order • Rs. ${cartState.total.toInt()}")
                         }
                     }
                 }
@@ -111,6 +112,11 @@ fun CheckoutScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            com.example.foodapp.ui.components.PremiumErrorBanner(
+                errorMessage = uiState.errorMessage ?: "",
+                isVisible = uiState.status == CheckoutStatus.Error && uiState.errorMessage != null,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
             // Delivery Address Section
             Text(
                 text = "Delivery Address",
@@ -245,5 +251,15 @@ fun CheckoutScreen(
             }
         }
 
+    }
+    
+    if (showSuccessAnimation) {
+        com.example.foodapp.ui.components.CheckoutSuccessEffect(
+            onAnimationFinished = {
+                showSuccessAnimation = false
+                completedOrderId?.let { onOrderSuccess(it) }
+            }
+        )
+    }
     }
 }

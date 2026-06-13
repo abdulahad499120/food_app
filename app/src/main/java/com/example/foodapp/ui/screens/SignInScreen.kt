@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -51,9 +53,10 @@ fun SignInScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val authState by authViewModel.authState.collectAsState()
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = context as? Activity
+    val webClientId = androidx.compose.ui.res.stringResource(id = R.string.default_web_client_id)
     
     var usePhoneAuth by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
@@ -190,13 +193,15 @@ fun SignInScreen(
                         singleLine = true
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Forgot Password?",
-                        color = VAL_BRAND_PRIMARY,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth().clickable { onNavigateToForgotPassword() },
-                        textAlign = TextAlign.End
-                    )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = onNavigateToForgotPassword) {
+                            Text(
+                                text = "Forgot Password?",
+                                color = VAL_BRAND_PRIMARY,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = {
@@ -227,7 +232,7 @@ fun SignInScreen(
         OutlinedButton(
             onClick = {
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestIdToken(webClientId)
                     .requestEmail()
                     .build()
                 val client = GoogleSignIn.getClient(context, gso)

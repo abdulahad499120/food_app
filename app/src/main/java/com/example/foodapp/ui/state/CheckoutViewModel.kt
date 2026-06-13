@@ -17,6 +17,7 @@ import com.example.foodapp.data.repository.AddressRepository
 class CheckoutViewModel : ViewModel() {
     private val orderRepository = OrderRepository()
     private val addressRepository = AddressRepository()
+    private val rewardsRepository = com.example.foodapp.data.repository.RewardsRepository()
     
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
@@ -24,11 +25,15 @@ class CheckoutViewModel : ViewModel() {
     fun initialize(userId: String?) {
         if (userId == null) return
         viewModelScope.launch {
-            addressRepository.getUserAddresses(userId).collect { addresses ->
-                val defaultAddress = addresses.find { it.isDefault } ?: addresses.firstOrNull()
-                if (defaultAddress != null) {
-                    _uiState.update { it.copy(address = defaultAddress, errorMessage = null) }
+            try {
+                addressRepository.getUserAddresses(userId).collect { addresses ->
+                    val defaultAddress = addresses.find { it.isDefault } ?: addresses.firstOrNull()
+                    if (defaultAddress != null) {
+                        _uiState.update { it.copy(address = defaultAddress, errorMessage = null) }
+                    }
                 }
+            } catch (e: Exception) {
+                // Ignore to avoid crash
             }
         }
     }
@@ -46,7 +51,12 @@ class CheckoutViewModel : ViewModel() {
         _uiState.update { it.copy(paymentMethod = method) }
     }
 
-    fun placeOrder(authState: AuthState) {
+    fun placeOrder(authState: AuthState, context: android.content.Context) {
+        if (!com.example.foodapp.utils.NetworkUtils.isNetworkAvailable(context)) {
+            _uiState.update { it.copy(errorMessage = "No internet connection. Please check your network and try again.") }
+            return
+        }
+
         if (!_uiState.value.address.isComplete) {
             _uiState.update { it.copy(errorMessage = "Please complete your delivery address") }
             return
@@ -75,7 +85,9 @@ class CheckoutViewModel : ViewModel() {
             
             orderRepository.placeOrder(order).fold(
                 onSuccess = { orderId ->
-                    CartManager.clearCart()
+                    if (cartState.payWithStars) {
+                        rewardsRepository.updateUserStars(user.uid, -150)
+                    }
                     _uiState.update { state -> state.copy(status = CheckoutStatus.Success, placedOrderId = orderId) }
                 },
                 onFailure = { exception ->

@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -7,6 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +39,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,8 +71,8 @@ fun RewardsScreen(
     viewModel: RewardsViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    val userProfile by viewModel.userProfile.collectAsState()
-    val redemptionItems by viewModel.redemptionItems.collectAsState()
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val redemptionItems by viewModel.redemptionItems.collectAsStateWithLifecycle()
 
     val starsBalance = userProfile.starsBalance
     val activeTier = userProfile.loyaltyTier
@@ -137,32 +141,46 @@ fun RewardsScreen(
  */
 @Composable
 fun ProgressionRing(starsBalance: Int) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(160.dp)) {
+    val maxStars = 150f
+    val targetProgress = (starsBalance / maxStars).coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+        ),
+        label = "ProgressAnimation"
+    )
+
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(200.dp)) {
         CircularProgressIndicator(
             progress = { 1f },
             modifier = Modifier.fillMaxSize(),
             color = Color.LightGray.copy(alpha = 0.3f),
-            strokeWidth = 8.dp,
+            strokeWidth = 12.dp,
         )
-        // Dummy progress calculation (e.g. out of 400 stars max)
-        val progress = (starsBalance / 400f).coerceIn(0f, 1f)
         CircularProgressIndicator(
-            progress = { progress },
+            progress = { animatedProgress },
             modifier = Modifier.fillMaxSize(),
-            color = GoldAccent,
-            strokeWidth = 8.dp,
+            color = VAL_BRAND_PRIMARY,
+            strokeWidth = 12.dp,
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = com.ahad.foodapp.R.drawable.rewards_star_illustration),
+                contentDescription = "Rewards Star",
+                modifier = Modifier.size(48.dp).padding(bottom = 8.dp)
+            )
             Text(
                 text = starsBalance.toString(),
-                style = MaterialTheme.typography.displayMedium.copy(
+                style = MaterialTheme.typography.displayLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    color = VAL_BRAND_PRIMARY
+                    color = com.example.foodapp.theme.TextPrimary
                 )
             )
             Text(
                 text = "Stars",
-                style = MaterialTheme.typography.titleMedium.copy(color = com.example.foodapp.theme.TextSecondary)
+                style = MaterialTheme.typography.bodyLarge.copy(color = com.example.foodapp.theme.TextSecondary)
             )
         }
     }
@@ -306,32 +324,34 @@ fun RedemptionSuccessOverlay(onDismiss: () -> Unit) {
                 (fadeIn(animationSpec = tween(400)) + scaleIn(initialScale = 0.8f)) togetherWith fadeOut()
             },
             label = "RedemptionSuccess"
-        ) { _ ->
-            Card(
-                colors = CardDefaults.cardColors(containerColor = CreamBackground),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+        ) { state ->
+            if (state) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = CreamBackground),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Redemption Successful!",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = com.example.foodapp.theme.TextPrimary)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Your reward has been applied to your account.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray)
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = VAL_BRAND_PRIMARY),
-                        modifier = Modifier.fillMaxWidth()
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Awesome")
+                        Text(
+                            text = "Redemption Successful!",
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, color = com.example.foodapp.theme.TextPrimary)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Your reward has been applied to your account.",
+                            style = MaterialTheme.typography.bodyMedium.copy(color = Color.DarkGray)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.buttonColors(containerColor = VAL_BRAND_PRIMARY),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Awesome")
+                        }
                     }
                 }
             }

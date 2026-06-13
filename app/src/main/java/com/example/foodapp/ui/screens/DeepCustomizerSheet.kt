@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -31,33 +34,40 @@ import com.example.foodapp.theme.*
 import com.example.foodapp.ui.components.PrimaryButton
 
 @Composable
-fun ProductDetailSheet(
+fun DeepCustomizerSheet(
     product: Product,
     onDismiss: () -> Unit,
     onAddToCartClick: (CartItem) -> Unit,
     isGuestViewing: Boolean = false,
+    isFavorite: Boolean = false,
+    onToggleFavorite: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     // Customization states
     var selectedSize by remember { mutableStateOf("Regular") }
-    var sweetness by remember { mutableStateOf(2) }
+    
+    // Standard Recipe Block States
+    var standardMilk by remember { mutableStateOf("Standard Milk") }
+    var standardSyrupPumps by remember { mutableStateOf(2) }
+
+    // Add-in Modifiers
     var extraToppings by remember { mutableStateOf(0) }
-    var nutType by remember { mutableStateOf("Mixed Nuts") }
-    var scoops by remember { mutableStateOf(2) }
+    var extraScoops by remember { mutableStateOf(0) }
 
     // Cost calculations
     val sizeBump = when (selectedSize) {
-        "Large", "Family" -> 100.0
+        "Large" -> 100.0
+        "Family" -> 150.0
         else -> 0.0
     }
     
     // Calculate final dynamic price
     val toppingsBump = extraToppings * 20.0
-    val scoopsBump = if (scoops > 2) (scoops - 2) * 50.0 else 0.0
+    val scoopsBump = extraScoops * 50.0
     val finalPrice = product.price + sizeBump + toppingsBump + scoopsBump
 
     // Calculate dynamic calories
-    val currentCalories = remember(selectedSize, extraToppings, scoops) {
+    val currentCalories = remember(selectedSize, extraToppings, extraScoops, standardSyrupPumps) {
         val base = product.baseCalories
         val largeBonus = if (selectedSize == "Large" || selectedSize == "Family") product.largeCalorieBonus else 0
         val toppingsCals = extraToppings * (product.ingredientCalorieMap["extraToppings"] ?: 0)
@@ -84,13 +94,44 @@ fun ProductDetailSheet(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+                
+                if (onToggleFavorite != null) {
+                    val scale by androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = if (isFavorite) 1.2f else 1.0f,
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                        ),
+                        label = "heart_scale"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.8f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(onClick = onToggleFavorite, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorite",
+                                tint = if (isFavorite) VAL_BRAND_PRIMARY else Color.Gray,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .scale(scale)
+                            )
+                        }
+                    }
+                }
             }
 
             // Product Header
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = product.name,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineMedium, // Semantic H2
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
@@ -113,41 +154,49 @@ fun ProductDetailSheet(
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                val sizes = listOf("Mini", "Small", "Regular", "Large")
+                val sizes = listOf(
+                    "Mini" to 24.dp,
+                    "Small" to 32.dp,
+                    "Regular" to 40.dp,
+                    "Large" to 48.dp
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    sizes.forEach { size ->
+                    sizes.forEach { (size, heightDp) ->
                         val isSelected = selectedSize == size
                         val sizeIconColor = if (isSelected) VAL_BRAND_PRIMARY else TextSecondary
                         val sizeTextColor = if (isSelected) TextPrimary else TextSecondary
                         
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { selectedSize = size }
-                                .padding(8.dp)
+                            modifier = Modifier.weight(1f)
                         ) {
-                            // Mocking silhouette with a circle
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(sizeIconColor.copy(alpha = 0.2f))
-                                    .border(2.dp, sizeIconColor, CircleShape)
+                                    .size(width = 40.dp, height = heightDp)
+                                    .clip(RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                                    .background(sizeIconColor.copy(alpha = 0.1f))
+                                    .border(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = sizeIconColor,
+                                        shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                                    )
+                                    .clickable { selectedSize = size }
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = size,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = sizeTextColor
-                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            TextButton(onClick = { selectedSize = size }) {
+                                Text(
+                                    text = size,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = sizeTextColor
+                                )
+                            }
                         }
                     }
                 }
@@ -155,88 +204,76 @@ fun ProductDetailSheet(
 
             HorizontalDivider(color = DividerColor, thickness = 8.dp)
 
-            // Customization: What's Included Accordions
+            // Interactive Standard Recipe Block
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "What's included",
+                    text = "Standard Recipe",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Nut Options
-                CustomizationAccordion(title = "Nuts", subtitle = nutType) {
-                    val nuts = listOf("Mixed Nuts", "Almonds", "Cashews", "Pistachios", "Walnuts")
-                    nuts.forEach { nut ->
+                CustomizationAccordion(title = "Milk", subtitle = standardMilk) {
+                    val milkOptions = listOf("Standard Milk", "Almond Milk", "Oat Milk", "Soy Milk")
+                    milkOptions.forEach { milk ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { nutType = nut }
+                                .clickable { standardMilk = milk }
                                 .padding(vertical = 8.dp)
                         ) {
                             RadioButton(
-                                selected = nutType == nut,
-                                onClick = { nutType = nut },
+                                selected = standardMilk == milk,
+                                onClick = { standardMilk = milk },
                                 colors = RadioButtonDefaults.colors(selectedColor = VAL_BRAND_PRIMARY)
                             )
-                            Text(text = nut, style = MaterialTheme.typography.bodyMedium)
+                            Text(text = milk, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                // Scoops Options
-                CustomizationAccordion(title = "Dry Fruit Scoops", subtitle = "$scoops Scoop(s)") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text("Extra Premium Scoops", fontWeight = FontWeight.Bold)
-                            Text("Premium Mixed Dry Fruits", style = MaterialTheme.typography.bodyMedium)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { if (scoops > 1) scoops-- }) {
-                                Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = if (scoops > 1) VAL_BRAND_PRIMARY else TextSecondary)
-                            }
-                            Text(text = scoops.toString(), modifier = Modifier.padding(horizontal = 8.dp))
-                            IconButton(onClick = { scoops++ }) {
-                                Icon(Icons.Default.Add, contentDescription = "Increase", tint = VAL_BRAND_PRIMARY)
-                            }
-                        }
-                    }
-                }
                 
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                // Syrups / Sweetness
-                CustomizationAccordion(title = "Flavors & Sweeteners", subtitle = "Sweetness: $sweetness pump(s)") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Classic Syrup", style = MaterialTheme.typography.bodyMedium)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { if (sweetness > 0) sweetness-- }) {
-                                Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = if (sweetness > 0) VAL_BRAND_PRIMARY else TextSecondary)
-                            }
-                            Text(text = sweetness.toString(), modifier = Modifier.padding(horizontal = 8.dp))
-                            IconButton(onClick = { sweetness++ }) {
-                                Icon(Icons.Default.Add, contentDescription = "Increase", tint = VAL_BRAND_PRIMARY)
-                            }
-                        }
-                    }
+                CustomizationAccordion(title = "Syrup", subtitle = "$standardSyrupPumps pump(s)") {
+                    ModifierStepper(
+                        label = "Classic Syrup Pumps",
+                        value = standardSyrupPumps,
+                        onDecrease = { if (standardSyrupPumps > 0) standardSyrupPumps-- },
+                        onIncrease = { standardSyrupPumps++ }
+                    )
                 }
+            }
+
+            HorizontalDivider(color = DividerColor, thickness = 8.dp)
+
+            // Add-in Modifiers
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Add-ins",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ModifierStepper(
+                    label = "Extra Toppings (+$20)",
+                    value = extraToppings,
+                    onDecrease = { if (extraToppings > 0) extraToppings-- },
+                    onIncrease = { extraToppings++ }
+                )
+                HorizontalDivider(color = DividerColor, thickness = 1.dp, modifier = Modifier.padding(vertical = 8.dp))
+                ModifierStepper(
+                    label = "Extra Dry Fruit Scoops (+$50)",
+                    value = extraScoops,
+                    onDecrease = { if (extraScoops > 0) extraScoops-- },
+                    onIncrease = { extraScoops++ }
+                )
             }
         }
 
-        // Sticky Footer
+        // Persistent Sticky Bottom CTA
         Surface(
             color = SurfaceWhite,
             shadowElevation = 16.dp,
@@ -261,10 +298,10 @@ fun ProductDetailSheet(
                                 product = product,
                                 quantity = 1,
                                 size = selectedSize,
-                                sweetness = sweetness,
+                                sweetness = standardSyrupPumps,
                                 extraToppings = extraToppings,
-                                nutType = nutType,
-                                scoops = scoops
+                                nutType = standardMilk,
+                                scoops = 2 + extraScoops
                             )
                             onAddToCartClick(cartItem)
                         },
@@ -288,6 +325,40 @@ fun ProductDetailSheet(
 }
 
 @Composable
+fun ModifierStepper(
+    label: String,
+    value: Int,
+    onDecrease: () -> Unit,
+    onIncrease: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.clip(CircleShape).background(if (value > 0) Color.LightGray.copy(alpha = 0.3f) else Color.Transparent)) {
+                IconButton(onClick = onDecrease) {
+                    Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = if (value > 0) VAL_BRAND_PRIMARY else TextSecondary)
+                }
+            }
+            Text(
+                text = value.toString(), 
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Box(modifier = Modifier.clip(CircleShape).background(Color.LightGray.copy(alpha = 0.3f))) {
+                IconButton(onClick = onIncrease) {
+                    Icon(Icons.Default.Add, contentDescription = "Increase", tint = VAL_BRAND_PRIMARY)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun CustomizationAccordion(
     title: String,
     subtitle: String,
@@ -300,8 +371,9 @@ fun CustomizationAccordion(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
                 .clickable { expanded = !expanded }
-                .padding(vertical = 16.dp),
+                .padding(vertical = 16.dp, horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -319,7 +391,7 @@ fun CustomizationAccordion(
             )
         }
         AnimatedVisibility(visible = expanded) {
-            Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            Column(modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 16.dp)) {
                 content()
             }
         }

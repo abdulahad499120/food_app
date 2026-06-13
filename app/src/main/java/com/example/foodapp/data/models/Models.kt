@@ -2,6 +2,7 @@ package com.example.foodapp.data.models
 
 import kotlinx.serialization.Serializable
 import java.util.Date
+import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.ServerTimestamp
 import com.google.firebase.firestore.GeoPoint
 
@@ -17,7 +18,9 @@ data class FirestoreProduct(
     val requiresCustomization: Boolean = false,
     val baseCalories: Int = 0,
     val largeCalorieBonus: Int = 0,
-    val ingredientCalorieMap: Map<String, Int> = emptyMap()
+    val ingredientCalorieMap: Map<String, Int> = emptyMap(),
+    val isFeatured: Boolean = false,
+    val isDeliverable: Boolean = true
 )
 
 data class Branch(
@@ -39,6 +42,7 @@ data class InventoryOverride(
 
 // ---- Domain / UI Models ----
 
+@androidx.compose.runtime.Stable
 @Serializable
 data class Brand(
     val name: String = "",
@@ -47,12 +51,14 @@ data class Brand(
     val minimum_order: Int = 0
 )
 
+@androidx.compose.runtime.Stable
 @Serializable
 data class Category(
     val id: String = "",
     val name: String = ""
 )
 
+@androidx.compose.runtime.Stable
 @Serializable
 data class Product(
     val id: String = "",
@@ -66,8 +72,11 @@ data class Product(
     val requiresCustomization: Boolean = false,
     val baseCalories: Int = 0,
     val largeCalorieBonus: Int = 0,
-    val ingredientCalorieMap: Map<String, Int> = emptyMap()
+    val ingredientCalorieMap: Map<String, Int> = emptyMap(),
+    val isFeatured: Boolean = false,
+    val isDeliverable: Boolean = true
 ) {
+    @get:Exclude
     val localImagePath: String
         get() {
             val sanitizedName = name.lowercase().replace(Regex("[^a-z0-9]+"), "_").trim('_')
@@ -93,6 +102,7 @@ data class Address(
     val location: GeoPoint? = null,
     val isDefault: Boolean = false
 ) {
+    @get:Exclude
     val isComplete: Boolean
         get() = streetAddress.isNotBlank()
         
@@ -101,6 +111,7 @@ data class Address(
     }
 }
 
+@androidx.compose.runtime.Stable
 data class CartItem(
     val product: Product = Product(),
     val quantity: Int = 0,
@@ -112,6 +123,7 @@ data class CartItem(
 )
 
 enum class OrderStatus {
+    GRACE_PERIOD,
     PENDING,
     PREPARING,
     OUT_FOR_DELIVERY,
@@ -135,6 +147,7 @@ data class Order(
     @ServerTimestamp val timestamp: Date? = null
 )
 
+@androidx.compose.runtime.Stable
 data class UserProfile(
     val uid: String = "",
     val name: String = "",
@@ -142,7 +155,9 @@ data class UserProfile(
     val phoneNumber: String? = null,
     val branchId: String? = null,
     val starsBalance: Int = 0,
-    val loyaltyTier: String = "Green"
+    val loyaltyTier: String = "Green",
+    val walletBalance: Double = 0.0,
+    val favorites: List<String> = emptyList()
 )
 
 data class StarHistory(
@@ -159,15 +174,16 @@ data class RedemptionItem(
     val costInStars: Int = 0
 )
 
-data class eGift(
-    val id: String = "",
-    val senderId: String = "",
-    val recipientName: String = "",
-    val recipientEmail: String = "",
-    val amount: Int = 0,
-    val message: String = "",
-    val designTemplateId: String = "",
-    val status: String = "Sent"
+@androidx.compose.runtime.Stable
+data class Gift(
+    val id: String,
+    val senderName: String,
+    val recipientEmail: String,
+    val amount: Double,
+    val message: String,
+    val themeUrl: String,
+    val isClaimed: Boolean = false,
+    val timestamp: Long
 )
 
 data class GiftTemplate(

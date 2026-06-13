@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,9 +18,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.foodapp.theme.DividerColor
 import com.example.foodapp.theme.SurfaceWhite
@@ -35,14 +37,31 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.TextAlign
+import com.example.foodapp.ui.state.OrderFlowState
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun CartScreen(
     modifier: Modifier = Modifier,
+    rewardsViewModel: com.example.foodapp.ui.state.RewardsViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onCheckoutRequest: () -> Unit = {},
     onNavigateToHome: () -> Unit = {}
 ) {
-    val cartState by CartManager.cartState.collectAsState()
+    val cartState by CartManager.cartState.collectAsStateWithLifecycle()
+    val userProfile by rewardsViewModel.userProfile.collectAsStateWithLifecycle()
+    var showCustomTipDialog by remember { mutableStateOf(false) }
+    var customTipInput by remember { mutableStateOf("") }
 
     Scaffold(
         modifier = modifier.fillMaxSize().background(com.example.foodapp.theme.VAL_BACKGROUND),
@@ -70,6 +89,23 @@ fun CartScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("⭐ Redeem 150 Stars for this order", style = MaterialTheme.typography.titleMedium, color = com.example.foodapp.theme.VAL_BRAND_PRIMARY)
+                            androidx.compose.material3.Switch(
+                                checked = cartState.payWithStars,
+                                onCheckedChange = { CartManager.togglePayWithStars(it) },
+                                enabled = userProfile.starsBalance >= 150,
+                                colors = androidx.compose.material3.SwitchDefaults.colors(
+                                    checkedThumbColor = com.example.foodapp.theme.VAL_BRAND_PRIMARY, 
+                                    checkedTrackColor = com.example.foodapp.theme.VAL_BRAND_PRIMARY.copy(alpha = 0.5f)
+                                )
+                            )
+                        }
+                        androidx.compose.material3.HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
+                        Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -84,6 +120,70 @@ fun CartScreen(
                             Text(text = "Delivery Fee", style = MaterialTheme.typography.bodyMedium)
                             Text(text = "Rs. ${cartState.deliveryFee.toInt()}", style = MaterialTheme.typography.bodyMedium)
                         }
+                        if (cartState.orderFlowState == OrderFlowState.DELIVERY) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = "Service Fee", style = MaterialTheme.typography.bodyMedium)
+                                Text(text = "Rs. ${cartState.serviceFee.toInt()}", style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(text = "Driver Tip", style = MaterialTheme.typography.bodyMedium)
+                                Text(text = "Rs. ${cartState.driverTip.toInt()}", style = MaterialTheme.typography.bodyMedium)
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(text = "Add a tip for the driver", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            val tipOptions = listOf(20.0, 50.0, 100.0)
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(tipOptions) { tipAmt ->
+                                    val isSelected = cartState.driverTip == tipAmt
+                                    TextButton(
+                                        onClick = { CartManager.setDriverTip(tipAmt) },
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                            containerColor = if (isSelected) com.example.foodapp.theme.VAL_BRAND_PRIMARY else com.example.foodapp.theme.SurfaceWhite,
+                                            contentColor = if (isSelected) com.example.foodapp.theme.SurfaceWhite else com.example.foodapp.theme.TextPrimary
+                                        ),
+                                        modifier = Modifier.background(
+                                            color = if (isSelected) com.example.foodapp.theme.VAL_BRAND_PRIMARY else Color.Transparent,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                    ) {
+                                        Text(text = "Rs. ${tipAmt.toInt()}")
+                                    }
+                                }
+                                item {
+                                    val isCustomSelected = cartState.driverTip > 0 && cartState.driverTip !in tipOptions
+                                    TextButton(
+                                        onClick = { showCustomTipDialog = true },
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                            containerColor = if (isCustomSelected) com.example.foodapp.theme.VAL_BRAND_PRIMARY else com.example.foodapp.theme.SurfaceWhite,
+                                            contentColor = if (isCustomSelected) com.example.foodapp.theme.SurfaceWhite else com.example.foodapp.theme.TextPrimary
+                                        ),
+                                        modifier = Modifier.background(
+                                            color = if (isCustomSelected) com.example.foodapp.theme.VAL_BRAND_PRIMARY else Color.Transparent,
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                    ) {
+                                        Text(text = "Custom")
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(16.dp))
                         Divider(color = DividerColor)
                         Spacer(modifier = Modifier.height(16.dp))
@@ -115,11 +215,11 @@ fun CartScreen(
         ) { isEmpty ->
             if (isEmpty) {
                 EmptyStateView(
-                    icon = Icons.Default.ShoppingCart,
+                    iconId = com.ahad.foodapp.R.drawable.empty_cart_illustration,
                     title = "Your cart is empty",
-                    message = "Looks like you haven't added any delicious food yet.",
+                    message = "Looks like you haven't added any items yet. Start exploring our menu!",
                     actionText = "Browse Menu",
-                    onActionClick = onNavigateToHome,
+                    onActionClick = { onNavigateToHome() },
                     modifier = modifier.padding(paddingValues)
                 )
             } else {
@@ -142,6 +242,38 @@ fun CartScreen(
                     }
                 }
             }
+        }
+        
+        if (showCustomTipDialog) {
+            AlertDialog(
+                onDismissRequest = { showCustomTipDialog = false },
+                title = {
+                    Text(text = "Custom Tip", style = MaterialTheme.typography.headlineSmall)
+                },
+                text = {
+                    OutlinedTextField(
+                        value = customTipInput,
+                        onValueChange = { customTipInput = it },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        label = { Text("Amount (Rs.)") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val amt = customTipInput.toDoubleOrNull() ?: 0.0
+                        CartManager.setDriverTip(amt)
+                        showCustomTipDialog = false
+                    }) {
+                        Text("Apply")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCustomTipDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

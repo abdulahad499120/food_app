@@ -7,17 +7,34 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 import com.example.foodapp.data.models.CartItem
+import com.example.foodapp.ui.state.OrderFlowState
 
 data class CartState(
     val items: List<CartItem> = emptyList(),
     val subtotal: Double = 0.0,
-    val deliveryFee: Double = 50.0,
-    val total: Double = 0.0
+    val deliveryFee: Double = 0.0,
+    val serviceFee: Double = 0.0,
+    val driverTip: Double = 0.0,
+    val payWithStars: Boolean = false,
+    val total: Double = 0.0,
+    val orderFlowState: OrderFlowState = OrderFlowState.PICKUP
 )
 
 object CartManager {
     private val _cartState = MutableStateFlow(CartState())
     val cartState: StateFlow<CartState> = _cartState.asStateFlow()
+
+    fun setOrderFlowState(state: OrderFlowState) {
+        _cartState.update { recalculate(it.copy(orderFlowState = state)) }
+    }
+
+    fun setDriverTip(tip: Double) {
+        _cartState.update { recalculate(it.copy(driverTip = tip)) }
+    }
+
+    fun togglePayWithStars(enabled: Boolean) {
+        _cartState.update { recalculate(it.copy(payWithStars = enabled)) }
+    }
 
     fun addItem(item: CartItem) {
         _cartState.update { state ->
@@ -90,7 +107,7 @@ object CartManager {
     }
 
     private fun recalculate(state: CartState): CartState {
-        val subtotal = state.items.sumOf { item ->
+        val rawSubtotal = state.items.sumOf { item ->
             // Calculate item price including customizations
             val basePrice = item.product.price
             val sizeBump = if (item.size == "Large" || item.size == "Family") 100.0 else 0.0
@@ -100,14 +117,25 @@ object CartManager {
             val finalItemPrice = basePrice + sizeBump + toppingsBump + scoopsBump
             finalItemPrice * item.quantity
         }
-        val total = if (state.items.isEmpty()) 0.0 else subtotal + state.deliveryFee
+        
+        val subtotal = if (state.payWithStars) 0.0 else rawSubtotal
+        
+        val deliveryFee = if (state.orderFlowState == OrderFlowState.DELIVERY) 50.0 else 0.0
+        val serviceFee = if (state.orderFlowState == OrderFlowState.DELIVERY && !state.payWithStars) rawSubtotal * 0.05 else 0.0
+        val tip = if (state.orderFlowState == OrderFlowState.DELIVERY) state.driverTip else 0.0
+        
+        val total = if (state.items.isEmpty()) 0.0 else subtotal + deliveryFee + serviceFee + tip
+        
         return state.copy(
             subtotal = subtotal,
+            deliveryFee = deliveryFee,
+            serviceFee = serviceFee,
+            driverTip = tip,
             total = total
         )
     }
 
     fun clearCart() {
-        _cartState.value = CartState()
+        _cartState.update { CartState(orderFlowState = it.orderFlowState) }
     }
 }

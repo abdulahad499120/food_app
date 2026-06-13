@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -17,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
@@ -27,9 +30,8 @@ import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
+import com.example.foodapp.utils.UniversalLocationEngine
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.lifecycle.Lifecycle
@@ -49,8 +51,10 @@ import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGro
 import com.mapbox.maps.extension.compose.annotation.IconImage
 import com.example.foodapp.ui.components.ExpressiveFullScreenLoader
 
+// GMS removed
+
 enum class LocationPermissionStatus {
-    PENDING_CHECK, GRANTED, DENIED
+    PENDING_CHECK, GRANTED, DENIED, UNAVAILABLE
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +65,7 @@ fun BranchLocatorScreen(
     viewModel: BranchLocatorViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     // Initial camera position centered over Lahore, Pakistan
     val mapViewportState = rememberMapViewportState {
@@ -73,7 +77,7 @@ fun BranchLocatorScreen(
     
     val listState = rememberLazyListState()
     val context = LocalContext.current
-    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val scope = rememberCoroutineScope()
     
     var permissionStatus by remember { mutableStateOf(LocationPermissionStatus.PENDING_CHECK) }
     var isLocatingUser by remember { mutableStateOf(false) }
@@ -86,19 +90,16 @@ fun BranchLocatorScreen(
         if (granted) {
             permissionStatus = LocationPermissionStatus.GRANTED
             isLocatingUser = true
-            fetchLocationWithFallback(
-                context = context,
-                fusedLocationClient = fusedLocationClient,
-                onSuccess = { location ->
-                    isLocatingUser = false
+            scope.launch {
+                val location = UniversalLocationEngine.getCurrentLocation(context)
+                isLocatingUser = false
+                if (location != null) {
                     viewModel.updateUserLocation(location.latitude, location.longitude)
                     android.widget.Toast.makeText(context, "Location found!", android.widget.Toast.LENGTH_SHORT).show()
-                },
-                onFailure = { e ->
-                    isLocatingUser = false
-                    android.widget.Toast.makeText(context, "Location Error: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                } else {
+                    android.widget.Toast.makeText(context, "Location Error: Unable to determine location", android.widget.Toast.LENGTH_LONG).show()
                 }
-            )
+            }
         } else {
             permissionStatus = LocationPermissionStatus.DENIED
         }
@@ -113,17 +114,13 @@ fun BranchLocatorScreen(
                 if (hasFine || hasCoarse) {
                     permissionStatus = LocationPermissionStatus.GRANTED
                     isLocatingUser = true
-                    fetchLocationWithFallback(
-                        context = context,
-                        fusedLocationClient = fusedLocationClient,
-                        onSuccess = { location ->
-                            isLocatingUser = false
+                    scope.launch {
+                        val location = UniversalLocationEngine.getCurrentLocation(context)
+                        isLocatingUser = false
+                        if (location != null) {
                             viewModel.updateUserLocation(location.latitude, location.longitude)
-                        },
-                        onFailure = {
-                            isLocatingUser = false
                         }
-                    )
+                    }
                 } else if (permissionStatus == LocationPermissionStatus.GRANTED) {
                     permissionStatus = LocationPermissionStatus.DENIED
                 }
@@ -336,6 +333,7 @@ fun BranchCard(
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -494,61 +492,4 @@ fun PermissionRecoveryState(modifier: Modifier = Modifier) {
         }
     }
 }
-@SuppressLint("MissingPermission")
-private fun fetchLocationWithFallback(
-    context: android.content.Context,
-    fusedLocationClient: com.google.android.gms.location.FusedLocationProviderClient,
-    onSuccess: (android.location.Location) -> Unit,
-    onFailure: (Exception) -> Unit
-) {
-    try {
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, CancellationTokenSource().token)
-            .addOnSuccessListener { location ->
-                if (location != null) {
-                    onSuccess(location)
-                } else {
-                    tryNativeLocationManager(context, onSuccess, onFailure)
-                }
-            }
-            .addOnFailureListener {
-                tryNativeLocationManager(context, onSuccess, onFailure)
-            }
-    } catch (e: Exception) {
-        tryNativeLocationManager(context, onSuccess, onFailure)
-    }
-}
-
-@SuppressLint("MissingPermission")
-private fun tryNativeLocationManager(
-    context: android.content.Context,
-    onSuccess: (android.location.Location) -> Unit,
-    onFailure: (Exception) -> Unit
-) {
-    try {
-        val locationManager = context.getSystemService(android.content.Context.LOCATION_SERVICE) as android.location.LocationManager
-        val isGpsEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER)
-        val isNetworkEnabled = locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
-
-        if (!isGpsEnabled && !isNetworkEnabled) {
-            onFailure(Exception("Please turn on GPS in your Android Quick Settings"))
-            return
-        }
-
-        val provider = if (isGpsEnabled) android.location.LocationManager.GPS_PROVIDER else android.location.LocationManager.NETWORK_PROVIDER
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            locationManager.getCurrentLocation(
-                provider,
-                null,
-                androidx.core.content.ContextCompat.getMainExecutor(context)
-            ) { location ->
-                if (location != null) onSuccess(location) else onFailure(Exception("Location manager returned null"))
-            }
-        } else {
-            val lastKnown = locationManager.getLastKnownLocation(provider)
-            if (lastKnown != null) onSuccess(lastKnown) else onFailure(Exception("Unable to get last known location"))
-        }
-    } catch (e: Exception) {
-        onFailure(e)
-    }
-}
+// End of BranchLocatorScreen.kt

@@ -1,8 +1,11 @@
 package com.example.foodapp.ui.navigation
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
@@ -14,6 +17,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -50,7 +54,7 @@ import com.example.foodapp.ui.components.BottomNavBar
 import com.example.foodapp.ui.components.BottomNavItem
 import com.example.foodapp.ui.screens.CartScreen
 import com.example.foodapp.ui.screens.HomeScreen
-import com.example.foodapp.ui.screens.ProductDetailSheet
+import com.example.foodapp.ui.screens.DeepCustomizerSheet
 import com.example.foodapp.ui.screens.OrderHistoryScreen
 import com.example.foodapp.ui.screens.RewardsScreen
 import com.example.foodapp.ui.screens.GiftScreen
@@ -69,7 +73,6 @@ import com.example.foodapp.ui.screens.OtpVerificationScreen
 import com.example.foodapp.ui.screens.CheckoutScreen
 import com.example.foodapp.ui.screens.OrderSuccessScreen
 import com.example.foodapp.ui.state.CheckoutViewModel
-import androidx.compose.runtime.collectAsState
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -114,9 +117,16 @@ fun FoodAppRoot(
 
     // Shared Menu State across the app
     val sharedMenuViewModel: MenuViewModel = viewModel()
+    val favoritesViewModel: com.example.foodapp.ui.state.FavoritesViewModel = viewModel()
+    val previousOrdersViewModel: com.example.foodapp.ui.state.PreviousOrdersViewModel = viewModel()
 
     // Auth State
-    val authState by authViewModel.authState.collectAsState()
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val userId = (authState as? AuthState.Authenticated)?.user?.uid
+    androidx.compose.runtime.LaunchedEffect(userId) {
+        favoritesViewModel.loadFavoritesForUser(userId)
+        previousOrdersViewModel.loadPreviousOrdersForUser(userId)
+    }
 
     // Bottom Sheet State
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -124,13 +134,14 @@ fun FoodAppRoot(
     // Failsafe Intercept State
     var showLocationModal by remember { mutableStateOf(false) }
     var showGuestInterceptorModal by remember { mutableStateOf(false) }
+    var showProductDetailSheet by remember { mutableStateOf(false) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     
     // Snackbar & Cart State
     var allowGuestViewing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val cartState by CartManager.cartState.collectAsState()
+    val cartState by CartManager.cartState.collectAsStateWithLifecycle()
     val cartItemCount = cartState.items.sumOf { it.quantity }
 
     val navItems = listOf(
@@ -192,10 +203,14 @@ fun FoodAppRoot(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = Screen.Home.route
+                startDestination = Screen.Home.route,
+                enterTransition = { androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) },
+                exitTransition = { androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) },
+                popEnterTransition = { androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) },
+                popExitTransition = { androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) }
             ) {
                 composable(Screen.Home.route) {
-                    val uiState by sharedMenuViewModel.uiState.collectAsState()
+                    val uiState by sharedMenuViewModel.uiState.collectAsStateWithLifecycle()
                     HomeScreen(
                         authState = authState,
                         cartItemCount = cartItemCount,
@@ -298,24 +313,53 @@ fun FoodAppRoot(
                 }
 
                 composable(Screen.OrderHistory.route) {
-                    val uiState by sharedMenuViewModel.uiState.collectAsState()
+                    val uiState by sharedMenuViewModel.uiState.collectAsStateWithLifecycle()
                     com.example.foodapp.ui.screens.OrderScreen(
                         viewModel = sharedMenuViewModel,
+                        favoritesViewModel = favoritesViewModel,
+                        previousOrdersViewModel = previousOrdersViewModel,
+                        authState = authState,
                         cartItemCount = cartItemCount,
                         onNavigateToCart = { navController.navigate(Screen.Cart.route) },
                         onNavigateToStoreSelection = { navController.navigate(Screen.BranchLocator.route) },
+                        onNavigateToAddressSelection = { navController.navigate(Screen.AddressMapPicker.route) },
+                        onNavigateToAuth = {
+                            navController.navigate(Screen.AuthWelcome.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
                         onProductClick = { product ->
                             val successState = uiState as? MenuUiState.Success
-                            if (successState != null && successState.activeBranch == null && !allowGuestViewing) {
-                                showLocationModal = true
+                            val flowState = sharedMenuViewModel.orderFlowState.value
+                            val hasPrerequisite = when(flowState) {
+                                com.example.foodapp.ui.state.OrderFlowState.PICKUP -> successState?.activeBranch != null
+                                com.example.foodapp.ui.state.OrderFlowState.DELIVERY -> successState?.activeDeliveryAddress != null
+                            }
+                            if (!hasPrerequisite && !allowGuestViewing) {
+                                if (flowState == com.example.foodapp.ui.state.OrderFlowState.PICKUP) {
+                                    showLocationModal = true
+                                } else {
+                                    navController.navigate(Screen.AddressMapPicker.route)
+                                }
                             } else {
                                 selectedProduct = product
+                                showProductDetailSheet = true
                             }
                         },
                         onQuickAddClick = { product ->
                             val successState = uiState as? MenuUiState.Success
-                            if (successState != null && successState.activeBranch == null && !allowGuestViewing) {
-                                showLocationModal = true
+                            val flowState = sharedMenuViewModel.orderFlowState.value
+                            val hasPrerequisite = when(flowState) {
+                                com.example.foodapp.ui.state.OrderFlowState.PICKUP -> successState?.activeBranch != null
+                                com.example.foodapp.ui.state.OrderFlowState.DELIVERY -> successState?.activeDeliveryAddress != null
+                            }
+                            if (!hasPrerequisite && !allowGuestViewing) {
+                                if (flowState == com.example.foodapp.ui.state.OrderFlowState.PICKUP) {
+                                    showLocationModal = true
+                                } else {
+                                    navController.navigate(Screen.AddressMapPicker.route)
+                                }
                             } else {
                                 if (authState !is AuthState.Authenticated) {
                                     navController.navigate(Screen.AuthWelcome.route) {
@@ -324,6 +368,7 @@ fun FoodAppRoot(
                                     }
                                 } else if (product.requiresCustomization) {
                                     selectedProduct = product
+                                    showProductDetailSheet = true
                                 } else {
                                     CartManager.addItem(product)
                                     coroutineScope.launch {
@@ -348,8 +393,19 @@ fun FoodAppRoot(
                 composable(Screen.OrderTracking.route) { backStackEntry ->
                     val orderId = backStackEntry.arguments?.getString("orderId")
                     if (orderId != null) {
-                        com.example.foodapp.ui.screens.ActiveOrderTrackingScreen(
-                            orderId = orderId,
+                        val liveTrackingViewModel: com.example.foodapp.ui.state.LiveTrackingViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                        val successState = sharedMenuViewModel.uiState.value as? MenuUiState.Success
+                        
+                        androidx.compose.runtime.LaunchedEffect(orderId) {
+                            liveTrackingViewModel.initializeTracking(
+                                branch = successState?.activeBranch,
+                                address = successState?.activeDeliveryAddress,
+                                orderId = orderId
+                            )
+                        }
+
+                        com.example.foodapp.ui.screens.LiveTrackingScreen(
+                            viewModel = liveTrackingViewModel,
                             onNavigateBack = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = false } } }
                         )
                     }
@@ -403,7 +459,7 @@ fun FoodAppRoot(
                 }
                 
                 composable(Screen.Checkout.route) {
-                    val authState by authViewModel.authState.collectAsState()
+                    val authState by authViewModel.authState.collectAsStateWithLifecycle()
                     CheckoutScreen(
                         authState = authState,
                         onNavigateBack = { navController.popBackStack() },
@@ -418,7 +474,7 @@ fun FoodAppRoot(
                 }
                 
                 composable(Screen.AddressList.route) {
-                    val authState by authViewModel.authState.collectAsState()
+                    val authState by authViewModel.authState.collectAsStateWithLifecycle()
                     com.example.foodapp.ui.screens.AddressListScreen(
                         authState = authState,
                         onNavigateBack = { navController.popBackStack() },
@@ -428,7 +484,7 @@ fun FoodAppRoot(
                 }
                 
                 composable(Screen.AddressMapPicker.route) {
-                    val authState by authViewModel.authState.collectAsState()
+                    val authState by authViewModel.authState.collectAsStateWithLifecycle()
                     com.example.foodapp.ui.screens.AddressMapPickerScreen(
                         authState = authState,
                         onNavigateBack = { navController.popBackStack() }
@@ -456,33 +512,39 @@ fun FoodAppRoot(
         }
     }
 
-    if (selectedProduct != null) {
-        val uiState by sharedMenuViewModel.uiState.collectAsState()
+    if (showProductDetailSheet && selectedProduct != null) {
+        val uiState by sharedMenuViewModel.uiState.collectAsStateWithLifecycle()
         val isGuestViewing = (uiState as? MenuUiState.Success)?.activeBranch == null && allowGuestViewing
+        
         ModalBottomSheet(
-            onDismissRequest = { selectedProduct = null },
-            sheetState = sheetState
+            onDismissRequest = { 
+                showProductDetailSheet = false 
+                selectedProduct = null
+            },
+            sheetState = sheetState,
+            containerColor = Color.White,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            modifier = Modifier.fillMaxHeight(0.9f)
         ) {
-            ProductDetailSheet(
+            val favoriteProductIds by favoritesViewModel.favoriteProductIds.collectAsStateWithLifecycle()
+            DeepCustomizerSheet(
                 product = selectedProduct!!,
-                onDismiss = { selectedProduct = null },
+                onDismiss = {
+                    showProductDetailSheet = false
+                    selectedProduct = null
+                },
                 onAddToCartClick = { cartItem ->
-                    if (authState !is AuthState.Authenticated) {
-                        selectedProduct = null
-                        navController.navigate(Screen.AuthWelcome.route) {
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    } else {
-                        CartManager.addItem(cartItem)
-                        selectedProduct = null
-                        coroutineScope.launch {
-                            snackbarHostState.currentSnackbarData?.dismiss()
-                            snackbarHostState.showSnackbar("Added ${cartItem.product.name} to your cart.")
-                        }
+                    CartManager.addItem(cartItem)
+                    showProductDetailSheet = false
+                    selectedProduct = null
+                    coroutineScope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        snackbarHostState.showSnackbar("Added ${cartItem.product.name} to your cart.")
                     }
                 },
-                isGuestViewing = isGuestViewing
+                isGuestViewing = isGuestViewing,
+                isFavorite = favoriteProductIds.contains(selectedProduct!!.id),
+                onToggleFavorite = { favoritesViewModel.toggleFavorite(selectedProduct!!.id) }
             )
         }
     }
@@ -492,7 +554,9 @@ fun FoodAppRoot(
             onDismiss = { showLocationModal = false },
             onChooseStore = {
                 showLocationModal = false
-                navController.navigate(Screen.BranchLocator.route)
+                if (navController.currentBackStackEntry?.lifecycle?.currentState == androidx.lifecycle.Lifecycle.State.RESUMED) {
+                    navController.navigate(Screen.BranchLocator.route)
+                }
             },
             onProceedAsGuest = {
                 showLocationModal = false
@@ -510,9 +574,11 @@ fun FoodAppRoot(
                 Button(
                     onClick = {
                         showGuestInterceptorModal = false
-                        navController.navigate(Screen.AuthWelcome.route) {
-                            launchSingleTop = true
-                            restoreState = true
+                        if (navController.currentBackStackEntry?.lifecycle?.currentState == androidx.lifecycle.Lifecycle.State.RESUMED) {
+                            navController.navigate(Screen.AuthWelcome.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = com.example.foodapp.theme.VAL_BRAND_PRIMARY)
@@ -524,7 +590,9 @@ fun FoodAppRoot(
                 OutlinedButton(
                     onClick = {
                         showGuestInterceptorModal = false
-                        navController.navigate(Screen.Checkout.route)
+                        if (navController.currentBackStackEntry?.lifecycle?.currentState == androidx.lifecycle.Lifecycle.State.RESUMED) {
+                            navController.navigate(Screen.Checkout.route)
+                        }
                     }
                 ) {
                     Text("Checkout as Guest")

@@ -119,23 +119,25 @@ fun AddressMapPickerScreen(
         }
 
         // Address Details Bottom Sheet
-        if (showDetailsSheet && selectedGeoPoint != null) {
-            ModalBottomSheet(
-                onDismissRequest = { showDetailsSheet = false },
-                containerColor = SurfaceWhite,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-            ) {
-                AddressDetailsSheetContent(
-                    location = selectedGeoPoint!!,
-                    viewModel = viewModel,
-                    onSave = { newAddress ->
-                        viewModel.saveAddress(user.uid, newAddress) {
-                            showDetailsSheet = false
-                            onNavigateBack() // Pop back to Address List
-                        }
-                    },
-                    onCancel = { showDetailsSheet = false }
-                )
+        if (showDetailsSheet) {
+            selectedGeoPoint?.let { geoPoint ->
+                ModalBottomSheet(
+                    onDismissRequest = { showDetailsSheet = false },
+                    containerColor = SurfaceWhite,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                ) {
+                    AddressDetailsSheetContent(
+                        location = geoPoint,
+                        viewModel = viewModel,
+                        onSave = { newAddress ->
+                            viewModel.saveAddress(user.uid, newAddress) {
+                                showDetailsSheet = false
+                                onNavigateBack() // Pop back to Address List
+                            }
+                        },
+                        onCancel = { showDetailsSheet = false }
+                    )
+                }
             }
         }
     }

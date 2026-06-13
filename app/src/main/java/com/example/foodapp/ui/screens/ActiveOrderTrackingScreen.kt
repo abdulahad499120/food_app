@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -48,7 +50,7 @@ fun ActiveOrderTrackingScreen(
     onNavigateBack: () -> Unit,
     viewModel: ActiveOrderTrackingViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(orderId) {
         viewModel.observeOrder(orderId)
@@ -186,6 +188,7 @@ fun TrackingMap(order: Order) {
 @Composable
 fun TrackingStatusPanel(order: Order) {
     val etaText = when (order.orderStatus) {
+        OrderStatus.GRACE_PERIOD -> "Preparing to confirm..."
         OrderStatus.PENDING -> "Confirming Order..."
         OrderStatus.PREPARING -> "Arriving in 25-30 min"
         OrderStatus.OUT_FOR_DELIVERY -> "Arriving in 10-15 min"

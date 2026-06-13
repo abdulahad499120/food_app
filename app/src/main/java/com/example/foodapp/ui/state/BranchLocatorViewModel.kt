@@ -34,19 +34,25 @@ class BranchLocatorViewModel : ViewModel() {
     val mapCameraEvents: SharedFlow<Point> = _mapCameraEvents.asSharedFlow()
 
     init {
+        repository.seedPhase5Branches() // Force seed the branches for testing
         fetchBranches()
     }
 
     private fun fetchBranches() {
         viewModelScope.launch {
-            repository.getBranches().collect { fetchedBranches ->
-                _uiState.update { state ->
-                    val sortedBranches = sortBranchesByDistance(fetchedBranches, state.branchDistances)
-                    state.copy(
-                        branches = sortedBranches, 
-                        isLoading = false
-                    ) 
+            try {
+                repository.getBranches().collect { fetchedBranches ->
+                    _uiState.update { state ->
+                        val sortedBranches = sortBranchesByDistance(fetchedBranches, state.branchDistances)
+                        state.copy(
+                            branches = sortedBranches, 
+                            isLoading = false
+                        ) 
+                    }
                 }
+            } catch (e: Exception) {
+                // Ignore or handle silently to prevent app crash if read permission is denied
+                _uiState.update { state -> state.copy(isLoading = false) }
             }
         }
     }

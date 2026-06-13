@@ -1,5 +1,7 @@
 package com.example.foodapp.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +36,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,8 +67,8 @@ fun OrderDetailScreen(
     onNavigateBack: () -> Unit,
     viewModel: OrderDetailViewModel = viewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val submitState by viewModel.submitState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val submitState by viewModel.submitState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(orderId) {
