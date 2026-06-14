@@ -25,6 +25,7 @@ import com.example.foodapp.ui.components.PrimaryButton
 fun ProfileScreen(
     user: UserProfile,
     onLogout: () -> Unit,
+    onNavigateToOrderHistory: () -> Unit = {},
     onNavigateToAddresses: () -> Unit = {},
     onNavigateToPayments: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -77,7 +78,7 @@ fun ProfileScreen(
 
         // Profile Menu Items
         item {
-            ProfileMenuItem(icon = Icons.Default.ShoppingBag, title = "Order History")
+            ProfileMenuItem(icon = Icons.Default.ShoppingBag, title = "Order History", onClick = onNavigateToOrderHistory)
             ProfileMenuItem(icon = Icons.Default.LocationOn, title = "Saved Addresses", onClick = onNavigateToAddresses)
             ProfileMenuItem(icon = Icons.Default.Payment, title = "Payment Methods", onClick = onNavigateToPayments)
             ProfileMenuItem(icon = Icons.Default.Settings, title = "Settings")

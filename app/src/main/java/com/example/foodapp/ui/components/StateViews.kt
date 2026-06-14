@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -16,6 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.RepeatMode
 import com.example.foodapp.theme.BrandPrimary
 import com.example.foodapp.theme.SurfaceWhite
 import com.example.foodapp.theme.TextPrimary
@@ -39,20 +45,33 @@ fun EmptyStateView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        if (iconId != null) {
-            Image(
-                painter = painterResource(id = iconId),
-                contentDescription = title,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.size(160.dp).padding(bottom = 16.dp)
-            )
-        } else if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                modifier = Modifier.size(80.dp),
-                tint = TextSecondary.copy(alpha = 0.5f)
-            )
+        val infiniteTransition = rememberInfiniteTransition(label = "EmptyStateFloat")
+        val floatOffset by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = -10f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "FloatY"
+        )
+        
+        Box(modifier = Modifier.offset(y = floatOffset.dp)) {
+            if (iconId != null) {
+                Image(
+                    painter = painterResource(id = iconId),
+                    contentDescription = title,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(160.dp).padding(bottom = 16.dp)
+                )
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    modifier = Modifier.size(80.dp),
+                    tint = TextSecondary.copy(alpha = 0.5f)
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(24.dp))

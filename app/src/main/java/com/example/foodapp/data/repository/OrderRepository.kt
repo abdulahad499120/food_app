@@ -42,16 +42,13 @@ class OrderRepository {
     /**
      * Observes the user's past orders.
      * 
-     * IMPORTANT: This query uses both .whereEqualTo("userId", userId) and 
-     * .orderBy("timestamp", Query.Direction.DESCENDING). Firestore requires a 
-     * Composite Index for this. If this query fails to emit data, check your 
-     * Logcat console for an error containing a direct Firebase URL to automatically 
-     * generate this index.
+     * IMPORTANT: We removed the Firestore orderBy and composite filters to avoid 
+     * requiring the user to manually create a Composite Index in the Firebase Console.
+     * Sorting is now handled locally.
      */
     fun getUserOrders(userId: String): Flow<List<Order>> = callbackFlow {
         val listener = ordersCollection
             .whereEqualTo("userId", userId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -65,12 +62,58 @@ class OrderRepository {
                         // Skip corrupted/old documents that fail to deserialize
                         null
                     }
-                } ?: emptyList()
+                }?.sortedByDescending { it.timestamp?.time ?: 0L } ?: emptyList()
                 
                 trySend(orders)
             }
             
         awaitClose { listener.remove() }
+    }
+
+    /**
+     * Observes the user's non-hidden orders for the new Order Management Dashboard.
+     */
+    fun listenToUserOrders(userId: String): Flow<List<Order>> = callbackFlow {
+        val listener = ordersCollection
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                
+                val orders = snapshot?.documents?.mapNotNull { doc ->
+                    try {
+                        doc.toObject(Order::class.java)?.copy(orderId = doc.id)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }?.filter { !it.isHiddenLocally }
+                 ?.sortedByDescending { it.timestamp?.time ?: 0L } 
+                 ?: emptyList()
+                
+                trySend(orders)
+            }
+            
+        awaitClose { listener.remove() }
+    }
+
+    suspend fun cancelActiveOrder(orderId: String): Result<Unit> {
+        return try {
+            ordersCollection.document(orderId).update("orderStatus", com.example.foodapp.data.models.OrderStatus.CANCELLED).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun hideOrderFromHistory(orderId: String): Result<Unit> {
+        return try {
+            ordersCollection.document(orderId).update("isHiddenLocally", true).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun getOrder(orderId: String): Result<Order?> {

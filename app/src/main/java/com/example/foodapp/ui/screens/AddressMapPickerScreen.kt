@@ -38,13 +38,12 @@ import androidx.compose.animation.shrinkVertically
 fun AddressMapPickerScreen(
     authState: AuthState,
     onNavigateBack: () -> Unit,
+    branchLocation: com.google.firebase.firestore.GeoPoint? = null,
+    onNavigateToAuth: () -> Unit = {},
+    onAddressSaved: (com.example.foodapp.data.models.Address) -> Unit = {},
     viewModel: AddressViewModel = viewModel()
 ) {
     val user = (authState as? AuthState.Authenticated)?.user
-    if (user == null) {
-        onNavigateBack()
-        return
-    }
 
     // Default to Lahore, Pakistan
     val mapViewportState = rememberMapViewportState {
@@ -55,6 +54,7 @@ fun AddressMapPickerScreen(
     }
 
     var showDetailsSheet by remember { mutableStateOf(false) }
+    var showDistanceErrorSheet by remember { mutableStateOf(false) }
     var selectedGeoPoint by remember { mutableStateOf<GeoPoint?>(null) }
 
     Scaffold(
@@ -106,8 +106,22 @@ fun AddressMapPickerScreen(
                         onClick = {
                             val center = mapViewportState.cameraState?.center
                             if (center != null) {
-                                selectedGeoPoint = GeoPoint(center.latitude(), center.longitude())
-                                showDetailsSheet = true
+                                var dist = 0f
+                                if (branchLocation != null) {
+                                    val results = FloatArray(1)
+                                    android.location.Location.distanceBetween(
+                                        center.latitude(), center.longitude(),
+                                        branchLocation.latitude, branchLocation.longitude,
+                                        results
+                                    )
+                                    dist = results[0]
+                                }
+                                if (dist > 25000f) {
+                                    showDistanceErrorSheet = true
+                                } else {
+                                    selectedGeoPoint = GeoPoint(center.latitude(), center.longitude())
+                                    showDetailsSheet = true
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp)
@@ -129,14 +143,45 @@ fun AddressMapPickerScreen(
                     AddressDetailsSheetContent(
                         location = geoPoint,
                         viewModel = viewModel,
+                        isGuest = user == null,
+                        onNavigateToAuth = {
+                            showDetailsSheet = false
+                            onNavigateToAuth()
+                        },
                         onSave = { newAddress ->
-                            viewModel.saveAddress(user.uid, newAddress) {
+                            if (user != null) {
+                                viewModel.saveAddress(user.uid, newAddress) {
+                                    showDetailsSheet = false
+                                    onAddressSaved(newAddress)
+                                    onNavigateBack() // Pop back to Address List
+                                }
+                            } else {
+                                // Guest RAM save
                                 showDetailsSheet = false
-                                onNavigateBack() // Pop back to Address List
+                                onAddressSaved(newAddress)
+                                onNavigateBack()
                             }
                         },
                         onCancel = { showDetailsSheet = false }
                     )
+                }
+            }
+        }
+
+        if (showDistanceErrorSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showDistanceErrorSheet = false },
+                containerColor = SurfaceWhite,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Out of Delivery Zone", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("We aren't delivering to this area just yet! Choose another location or select Pick-up instead.", style = MaterialTheme.typography.bodyLarge, color = TextSecondary, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Spacer(modifier = Modifier.height(32.dp))
+                    PrimaryButton(onClick = { showDistanceErrorSheet = false }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Change Location")
+                    }
                 }
             }
         }
@@ -148,6 +193,8 @@ fun AddressMapPickerScreen(
 fun AddressDetailsSheetContent(
     location: GeoPoint,
     viewModel: AddressViewModel,
+    isGuest: Boolean,
+    onNavigateToAuth: () -> Unit,
     onSave: (Address) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -208,6 +255,24 @@ fun AddressDetailsSheetContent(
             )
         }
 
+        if (isGuest) {
+            Surface(
+                color = VAL_BRAND_PRIMARY.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp),
+                onClick = onNavigateToAuth,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+            ) {
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = VAL_BRAND_PRIMARY)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text("Tired of re-typing?", fontWeight = FontWeight.Bold, color = VAL_BRAND_PRIMARY)
+                        Text("Secure your account in 2 taps to save this location forever.", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
+                    }
+                }
+            }
+        }
+
         TextInput(
             label = "Complete Street Address",
             value = streetAddress,
@@ -251,22 +316,26 @@ fun AddressDetailsSheetContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Default Toggle
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Save as Default", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-                Text("Use this address automatically for checkout", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        if (!isGuest) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Save as Default", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                    Text("Use this address automatically for checkout", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+                Switch(
+                    checked = isDefault,
+                    onCheckedChange = { isDefault = it },
+                    colors = SwitchDefaults.colors(checkedTrackColor = VAL_BRAND_PRIMARY)
+                )
             }
-            Switch(
-                checked = isDefault,
-                onCheckedChange = { isDefault = it },
-                colors = SwitchDefaults.colors(checkedTrackColor = VAL_BRAND_PRIMARY)
-            )
+            Spacer(modifier = Modifier.height(32.dp))
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        Spacer(modifier = Modifier.height(32.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),

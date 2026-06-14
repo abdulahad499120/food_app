@@ -193,6 +193,7 @@ fun TrackingStatusPanel(order: Order) {
         OrderStatus.PREPARING -> "Arriving in 25-30 min"
         OrderStatus.OUT_FOR_DELIVERY -> "Arriving in 10-15 min"
         OrderStatus.DELIVERED -> "Delivered"
+        OrderStatus.CANCELLED -> "Cancelled"
     }
 
     Column(modifier = Modifier.fillMaxSize()) {

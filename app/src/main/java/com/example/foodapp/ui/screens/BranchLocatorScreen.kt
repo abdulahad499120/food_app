@@ -105,32 +105,7 @@ fun BranchLocatorScreen(
         }
     }
 
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                val hasFine = androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                val hasCoarse = androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                if (hasFine || hasCoarse) {
-                    permissionStatus = LocationPermissionStatus.GRANTED
-                    isLocatingUser = true
-                    scope.launch {
-                        val location = UniversalLocationEngine.getCurrentLocation(context)
-                        isLocatingUser = false
-                        if (location != null) {
-                            viewModel.updateUserLocation(location.latitude, location.longitude)
-                        }
-                    }
-                } else if (permissionStatus == LocationPermissionStatus.GRANTED) {
-                    permissionStatus = LocationPermissionStatus.DENIED
-                }
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
+
 
     // Sync Map Camera to Selection
     LaunchedEffect(Unit) {

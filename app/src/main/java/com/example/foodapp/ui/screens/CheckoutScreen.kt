@@ -2,6 +2,10 @@ package com.example.foodapp.ui.screens
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,12 +31,14 @@ import com.example.foodapp.ui.state.CartManager
 import com.example.foodapp.ui.state.CheckoutStatus
 import com.example.foodapp.ui.state.CheckoutViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddressList: () -> Unit,
+    onNavigateToPayments: () -> Unit,
     onOrderSuccess: (String) -> Unit,
     viewModel: CheckoutViewModel = viewModel(),
     authState: AuthState = AuthState.Unauthenticated,
@@ -48,7 +54,10 @@ fun CheckoutScreen(
     }
 
     var showSuccessAnimation by remember { mutableStateOf(false) }
+    var showPaymentSheet by remember { mutableStateOf(false) }
     var completedOrderId by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.status) {
         if (uiState.status == CheckoutStatus.Success) {
@@ -60,9 +69,12 @@ fun CheckoutScreen(
         }
     }
 
+    var isOrderSummaryExpanded by remember { mutableStateOf(true) }
+
     Box(modifier = modifier.fillMaxSize()) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Checkout", style = MaterialTheme.typography.titleLarge) },
@@ -87,18 +99,34 @@ fun CheckoutScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     PrimaryButton(
-                        onClick = { viewModel.placeOrder(authState, context) },
-                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            if (cartState.orderFlowState == com.example.foodapp.ui.state.OrderFlowState.DELIVERY && !uiState.address.isComplete) {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Please select a delivery address to continue.")
+                                }
+                            } else {
+                                viewModel.placeOrder(authState, context)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize(),
                         enabled = uiState.status != CheckoutStatus.Loading
                     ) {
-                        if (uiState.status == CheckoutStatus.Loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = SurfaceWhite,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(text = "Place Order • Rs. ${cartState.total.toInt()}")
+                        AnimatedContent(
+                            targetState = uiState.status == CheckoutStatus.Loading,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "CheckoutButtonMorph"
+                        ) { isLoading ->
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = SurfaceWhite,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(text = "Place Order • Rs. ${cartState.total.toInt()}")
+                            }
                         }
                     }
                 }
@@ -172,34 +200,58 @@ fun CheckoutScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Order Summary Section
-            Text(
-                text = "Order Summary",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isOrderSummaryExpanded = !isOrderSummaryExpanded }
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Order Summary",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = if (isOrderSummaryExpanded) "Hide" else "Show",
+                    color = BrandPrimary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Surface(
                 color = SurfaceWhite,
                 shadowElevation = 2.dp,
                 shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    cartState.items.forEach { cartItem ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "${cartItem.quantity}x ${cartItem.product.name}", style = MaterialTheme.typography.bodyMedium)
-                            Text(text = "Rs. ${(cartItem.product.price * cartItem.quantity).toInt()}", style = MaterialTheme.typography.bodyMedium)
+                    AnimatedVisibility(
+                        visible = isOrderSummaryExpanded,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Column {
+                            cartState.items.forEach { cartItem ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(text = "${cartItem.quantity}x ${cartItem.product.name}", style = MaterialTheme.typography.bodyMedium)
+                                    Text(text = "Rs. ${(cartItem.product.price * cartItem.quantity).toInt()}", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            HorizontalDivider(color = DividerColor)
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(color = DividerColor)
-                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -246,7 +298,70 @@ fun CheckoutScreen(
                         colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = uiState.paymentMethod, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = uiState.paymentMethod, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { showPaymentSheet = true }) {
+                        Text("Edit", color = BrandPrimary)
+                    }
+                }
+            }
+        }
+        
+        if (showPaymentSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showPaymentSheet = false },
+                containerColor = SurfaceWhite
+            ) {
+                Column(modifier = Modifier.fillMaxWidth().padding(24.dp).padding(bottom = 32.dp)) {
+                    Text("Select Payment Method", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Cash on Delivery Option
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                viewModel.setPaymentMethod("Cash on Delivery")
+                                showPaymentSheet = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = uiState.paymentMethod == "Cash on Delivery",
+                            onClick = {
+                                viewModel.setPaymentMethod("Cash on Delivery")
+                                showPaymentSheet = false
+                            },
+                            colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Cash on Delivery", style = MaterialTheme.typography.bodyLarge)
+                    }
+                    
+                    // Credit Card Option (If Authenticated)
+                    if (user != null) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setPaymentMethod("Credit Card")
+                                    showPaymentSheet = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = uiState.paymentMethod == "Credit Card",
+                                onClick = {
+                                    viewModel.setPaymentMethod("Credit Card")
+                                    showPaymentSheet = false
+                                },
+                                colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Credit Card", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
             }
         }

@@ -25,6 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +38,9 @@ import com.example.foodapp.data.models.Category
 import com.example.foodapp.data.models.Product
 import com.example.foodapp.theme.TextPrimary
 import com.example.foodapp.theme.VAL_BRAND_PRIMARY
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 
 @Composable
 fun MasterCatalogView(
@@ -164,23 +172,56 @@ fun ProductNodeComponent(
             modifier = Modifier.size(140.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize().clip(CircleShape).background(Color.LightGray.copy(alpha = 0.2f))) {
-                AsyncImage(
-                    model = product.localImagePath,
-                    contentDescription = product.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                val sharedTransitionScope = com.example.foodapp.ui.navigation.LocalSharedTransitionScope.current
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                val animatedVisibilityScope = com.example.foodapp.ui.navigation.LocalAnimatedVisibilityScope.current
+
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                    with(sharedTransitionScope) {
+                        AsyncImage(
+                            model = product.localImagePath,
+                            contentDescription = product.name,
+                            modifier = Modifier.fillMaxSize().sharedElement(
+                                rememberSharedContentState(key = "image_${product.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = product.localImagePath,
+                        contentDescription = product.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
             
             // Heart toggle in top right
-            val scale by animateFloatAsState(
-                targetValue = if (isFavorite) 1.2f else 1.0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                ),
-                label = "heart_scale_node"
-            )
+            val transition = updateTransition(targetState = isFavorite, label = "FavoriteTransition")
+            
+            val heartScale by transition.animateFloat(
+                transitionSpec = {
+                    spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                },
+                label = "HeartScale"
+            ) { favorite ->
+                if (favorite) 1.2f else 1.0f
+            }
+
+            val heartColor by transition.animateColor(
+                transitionSpec = { tween(durationMillis = 300) },
+                label = "HeartColor"
+            ) { favorite ->
+                if (favorite) VAL_BRAND_PRIMARY else Color.Gray
+            }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -194,8 +235,8 @@ fun ProductNodeComponent(
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if (isFavorite) VAL_BRAND_PRIMARY else Color.Gray,
-                        modifier = Modifier.size(20.dp).scale(scale)
+                        tint = heartColor,
+                        modifier = Modifier.size(20.dp).scale(heartScale)
                     )
                 }
             }

@@ -127,7 +127,8 @@ enum class OrderStatus {
     PENDING,
     PREPARING,
     OUT_FOR_DELIVERY,
-    DELIVERED
+    DELIVERED,
+    CANCELLED
 }
 
 data class Order(
@@ -144,6 +145,7 @@ data class Order(
     val deliveryLocation: GeoPoint? = null,
     val rating: Int? = null,
     val reviewText: String? = null,
+    val isHiddenLocally: Boolean = false,
     @ServerTimestamp val timestamp: Date? = null
 )
 
@@ -190,4 +192,11 @@ data class GiftTemplate(
     val templateId: String = "",
     val imageUrl: String = "",
     val category: String = ""
+)
+
+data class Message(
+    val messageId: String = "",
+    val sender: String = "USER", // "USER" or "SUPPORT"
+    val text: String = "",
+    @ServerTimestamp val timestamp: Date? = null
 )

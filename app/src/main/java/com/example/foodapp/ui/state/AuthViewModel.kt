@@ -12,6 +12,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import androidx.credentials.Credential
+import androidx.credentials.CustomCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.GoogleAuthProvider
 
 class AuthViewModel : ViewModel() {
     // In a real app, inject this via Dagger/Hilt
@@ -98,6 +102,21 @@ class AuthViewModel : ViewModel() {
     fun handleGoogleSignInResult(credential: AuthCredential) {
         _authState.value = AuthState.Loading
         signInWithCredential(credential)
+    }
+
+    fun handleCredentialManagerResult(credential: Credential) {
+        _authState.value = AuthState.Loading
+        try {
+            if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                val firebaseCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
+                signInWithCredential(firebaseCredential)
+            } else {
+                _authState.value = AuthState.Error("Unexpected credential type")
+            }
+        } catch (e: Exception) {
+            _authState.value = AuthState.Error(e.message ?: "Failed to process credential")
+        }
     }
 
     private fun signInWithCredential(credential: AuthCredential) {

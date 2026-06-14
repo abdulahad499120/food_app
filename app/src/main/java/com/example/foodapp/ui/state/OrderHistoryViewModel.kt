@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 sealed class OrderHistoryUiState {
     object Loading : OrderHistoryUiState()
     object Empty : OrderHistoryUiState()
-    data class Success(val orders: List<Order>) : OrderHistoryUiState()
+    data class Success(val activeOrders: List<Order>, val pastOrders: List<Order>) : OrderHistoryUiState()
     data class Error(val message: String) : OrderHistoryUiState()
 }
 
@@ -28,16 +28,38 @@ class OrderHistoryViewModel(
         viewModelScope.launch {
             _uiState.update { OrderHistoryUiState.Loading }
             try {
-                repository.getUserOrders(userId).collect { orders ->
+                repository.listenToUserOrders(userId).collect { orders ->
                     if (orders.isEmpty()) {
                         _uiState.update { OrderHistoryUiState.Empty }
                     } else {
-                        _uiState.update { OrderHistoryUiState.Success(orders) }
+                        val activeOrders = orders.filter { 
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.GRACE_PERIOD ||
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.PENDING ||
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.PREPARING ||
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.OUT_FOR_DELIVERY
+                        }
+                        val pastOrders = orders.filter { 
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.DELIVERED ||
+                            it.orderStatus == com.example.foodapp.data.models.OrderStatus.CANCELLED
+                        }
+                        _uiState.update { OrderHistoryUiState.Success(activeOrders, pastOrders) }
                     }
                 }
             } catch (e: Exception) {
                 _uiState.update { OrderHistoryUiState.Error(e.message ?: "Failed to load orders") }
             }
+        }
+    }
+
+    fun cancelOrder(orderId: String) {
+        viewModelScope.launch {
+            repository.cancelActiveOrder(orderId)
+        }
+    }
+
+    fun hideOrder(orderId: String) {
+        viewModelScope.launch {
+            repository.hideOrderFromHistory(orderId)
         }
     }
 

@@ -36,6 +36,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.example.foodapp.ui.state.OrderFlowState
 import androidx.compose.foundation.shape.RoundedCornerShape
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     modifier: Modifier = Modifier,
@@ -228,16 +230,54 @@ fun CartScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    items(cartState.items) { cartItem ->
-                        ProductListItem(
-                            imageUrl = cartItem.product.localImagePath,
-                            title = cartItem.product.name,
-                            description = "Quantity: ${cartItem.quantity}",
-                            price = cartItem.product.price * cartItem.quantity,
-                            onClick = {
-                                CartManager.updateQuantity(cartItem.product.id, cartItem.quantity + 1)
+                    items(cartState.items, key = { it.hashCode() }) { cartItem ->
+                        val dismissState = androidx.compose.material3.rememberSwipeToDismissBoxState(
+                            confirmValueChange = { dismissValue ->
+                                if (dismissValue == androidx.compose.material3.SwipeToDismissBoxValue.EndToStart) {
+                                    CartManager.removeItem(cartItem)
+                                    true
+                                } else {
+                                    false
+                                }
                             }
                         )
+                        
+                        androidx.compose.material3.SwipeToDismissBox(
+                            state = dismissState,
+                            enableDismissFromStartToEnd = false,
+                            backgroundContent = {
+                                val color by androidx.compose.animation.animateColorAsState(
+                                    if (dismissState.targetValue == androidx.compose.material3.SwipeToDismissBoxValue.EndToStart) {
+                                        androidx.compose.material3.MaterialTheme.colorScheme.error
+                                    } else {
+                                        androidx.compose.ui.graphics.Color.Transparent
+                                    }
+                                )
+                                androidx.compose.foundation.layout.Box(
+                                    modifier = androidx.compose.ui.Modifier
+                                        .fillMaxSize()
+                                        .background(color)
+                                        .padding(horizontal = 20.dp),
+                                    contentAlignment = androidx.compose.ui.Alignment.CenterEnd
+                                ) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Delete,
+                                        contentDescription = "Delete",
+                                        tint = androidx.compose.ui.graphics.Color.White
+                                    )
+                                }
+                            }
+                        ) {
+                            ProductListItem(
+                                imageUrl = cartItem.product.localImagePath,
+                                title = cartItem.product.name,
+                                description = "Quantity: ${cartItem.quantity}",
+                                price = cartItem.product.price * cartItem.quantity,
+                                onClick = {
+                                    CartManager.updateQuantity(cartItem.product.id, cartItem.quantity + 1)
+                                }
+                            )
+                        }
                         Divider(color = DividerColor, modifier = Modifier.padding(horizontal = 16.dp))
                     }
                 }

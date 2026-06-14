@@ -63,18 +63,17 @@ class CheckoutViewModel : ViewModel() {
         }
         
         val user = (authState as? AuthState.Authenticated)?.user
-        if (user == null) {
-            _uiState.update { it.copy(errorMessage = "You must be logged in to place an order") }
-            return
-        }
+        // If guest, userId is empty string or "GUEST"
+        val userId = user?.uid ?: "GUEST"
+        val userName = user?.name ?: "Guest User"
 
         viewModelScope.launch {
             _uiState.update { it.copy(status = CheckoutStatus.Loading, errorMessage = null) }
             
             val cartState = CartManager.cartState.value
             val order = Order(
-                userId = user.uid,
-                customerName = user.name,
+                userId = userId,
+                customerName = userName,
                 deliveryAddress = _uiState.value.address,
                 items = cartState.items,
                 subtotal = cartState.subtotal,
@@ -85,8 +84,13 @@ class CheckoutViewModel : ViewModel() {
             
             orderRepository.placeOrder(order).fold(
                 onSuccess = { orderId ->
-                    if (cartState.payWithStars) {
+                    if (cartState.payWithStars && user != null) {
                         rewardsRepository.updateUserStars(user.uid, -150)
+                    }
+                    if (user == null) {
+                        // Save guest active order id
+                        val guestSessionRepo = com.example.foodapp.data.repository.GuestSessionRepository(context)
+                        guestSessionRepo.setGuestActiveOrderId(orderId)
                     }
                     _uiState.update { state -> state.copy(status = CheckoutStatus.Success, placedOrderId = orderId) }
                 },

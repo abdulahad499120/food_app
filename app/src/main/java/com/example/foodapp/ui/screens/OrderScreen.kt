@@ -50,6 +50,7 @@ import com.example.foodapp.ui.components.MasterCatalogView
 import com.example.foodapp.ui.components.FilteredCategoryGridView
 import com.example.foodapp.ui.components.ProductGrid
 import com.example.foodapp.ui.components.OrderTopBar
+import com.example.foodapp.ui.components.GuestActiveOrderBanner
 
 @Composable
 fun OrderScreen(
@@ -64,6 +65,8 @@ fun OrderScreen(
     onProductClick: (Product) -> Unit,
     onQuickAddClick: (Product) -> Unit,
     onNavigateToAuth: () -> Unit = {},
+    onNavigateToGuestTracking: (String) -> Unit = {},
+    guestActiveOrderId: String? = null,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -107,6 +110,13 @@ fun OrderScreen(
             onStoreClick = onNavigateToStoreSelection,
             onCartClick = onNavigateToCart
         )
+
+        if (guestActiveOrderId != null) {
+            GuestActiveOrderBanner(
+                orderId = guestActiveOrderId,
+                onClick = onNavigateToGuestTracking
+            )
+        }
 
         // Horizontal Sub-Navigation Tabs
         Row(

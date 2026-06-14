@@ -18,15 +18,15 @@ data class LiveTrackingState(
     val orderStatus: OrderStatus = OrderStatus.GRACE_PERIOD,
     val branchLocation: Point? = null,
     val userLocation: Point? = null,
-    val driverLocation: Point? = null,
-    val progress: Float = 0f,
     val gracePeriodSecondsRemaining: Int = 60,
     val currentOrderId: String? = null
 )
 
-class LiveTrackingViewModel : ViewModel() {
+class LiveTrackingViewModel(application: android.app.Application) : androidx.lifecycle.AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(LiveTrackingState())
     val uiState: StateFlow<LiveTrackingState> = _uiState.asStateFlow()
+
+    private val guestSessionRepo = com.example.foodapp.data.repository.GuestSessionRepository(application)
 
     private val orderRepository = com.example.foodapp.data.repository.OrderRepository()
     private val rewardsRepository = com.example.foodapp.data.repository.RewardsRepository()
@@ -40,7 +40,6 @@ class LiveTrackingViewModel : ViewModel() {
             orderStatus = OrderStatus.GRACE_PERIOD,
             branchLocation = bLoc,
             userLocation = uLoc,
-            driverLocation = bLoc,
             gracePeriodSecondsRemaining = 60,
             currentOrderId = orderId
         )
@@ -58,29 +57,41 @@ class LiveTrackingViewModel : ViewModel() {
         
         // Grace period over, commit order
         _uiState.value = _uiState.value.copy(orderStatus = OrderStatus.PENDING, gracePeriodSecondsRemaining = 0)
-        CartManager.clearCart() // Lock in the order, clear the cart
         
         delay(3000)
         _uiState.value = _uiState.value.copy(orderStatus = OrderStatus.PREPARING)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+            CartManager.clearCart() // Lock in the order, clear the cart
+        }
         
         delay(3000)
         _uiState.value = _uiState.value.copy(orderStatus = OrderStatus.OUT_FOR_DELIVERY)
-        
-        // Simulate driving along a straight line (mocking polyline)
-        val steps = 100
-        for (i in 0..steps) {
-            val t = i / steps.toFloat()
-            val lng = start.longitude() + t * (end.longitude() - start.longitude())
-            val lat = start.latitude() + t * (end.latitude() - start.latitude())
-            
-            _uiState.value = _uiState.value.copy(
-                driverLocation = Point.fromLngLat(lng, lat),
-                progress = t
-            )
-            delay(100) // 10 seconds total drive time
-        }
-        
+        // The UI will now take over and animate the rider's journey for 5 minutes.
+    }
+    
+    fun markOrderComplete() {
         _uiState.value = _uiState.value.copy(orderStatus = OrderStatus.DELIVERED)
+        viewModelScope.launch {
+            guestSessionRepo.clearGuestActiveOrderId()
+        }
+    }
+
+    fun calculateRiderLocation(start: Point, end: Point, fraction: Float): Point {
+        val lng = start.longitude() + fraction * (end.longitude() - start.longitude())
+        val lat = start.latitude() + fraction * (end.latitude() - start.latitude())
+        return Point.fromLngLat(lng, lat)
+    }
+
+    fun calculateBearing(start: Point, end: Point): Double {
+        val lat1 = Math.toRadians(start.latitude())
+        val lat2 = Math.toRadians(end.latitude())
+        val dLng = Math.toRadians(end.longitude() - start.longitude())
+        
+        val y = kotlin.math.sin(dLng) * kotlin.math.cos(lat2)
+        val x = kotlin.math.cos(lat1) * kotlin.math.sin(lat2) - kotlin.math.sin(lat1) * kotlin.math.cos(lat2) * kotlin.math.cos(dLng)
+        var brng = Math.toDegrees(kotlin.math.atan2(y, x))
+        brng = (brng + 360) % 360
+        return brng
     }
 
     fun cancelOrder(userId: String?, onSuccess: () -> Unit) {
@@ -88,6 +99,7 @@ class LiveTrackingViewModel : ViewModel() {
         viewModelScope.launch {
             uiState.value.currentOrderId?.let { orderId ->
                 orderRepository.deleteOrder(orderId)
+                guestSessionRepo.clearGuestActiveOrderId()
             }
             if (CartManager.cartState.value.payWithStars && userId != null) {
                 rewardsRepository.updateUserStars(userId, 150) // Refund stars

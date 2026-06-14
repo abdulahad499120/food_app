@@ -14,9 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +44,20 @@ fun StoreSelectionStrip(
             .shadow(elevation = 8.dp, spotColor = Color.Black.copy(alpha = 0.05f)),
         color = SurfaceWhite
     ) {
+        val cartScale = remember { Animatable(1f) }
+        LaunchedEffect(cartItemCount) {
+            if (cartItemCount > 0) {
+                cartScale.snapTo(1.2f)
+                cartScale.animateTo(
+                    targetValue = 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            }
+        }
+
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
@@ -79,6 +98,7 @@ fun StoreSelectionStrip(
                 // Right Side: Floating Cart Bubble
                 Box(
                     modifier = Modifier
+                        .scale(cartScale.value)
                         .clip(CircleShape)
                         .background(BrandPrimary)
                         .clickable { onCartClick() }

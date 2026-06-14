@@ -17,9 +17,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -39,6 +44,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 
+import com.example.foodapp.ui.components.GuestActiveOrderBanner
+
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -48,12 +55,28 @@ fun HomeScreen(
     onNavigateToAuth: () -> Unit = {},
     onNavigateToOrder: () -> Unit = {},
     onNavigateToCart: () -> Unit = {},
+    onNavigateToGuestTracking: (String) -> Unit = {},
+    guestActiveOrderId: String? = null,
     giftViewModel: GiftViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val pendingGifts by giftViewModel.pendingGifts.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val cartScale = remember { Animatable(1f) }
+    LaunchedEffect(cartItemCount) {
+        if (cartItemCount > 0) {
+            cartScale.snapTo(1.2f)
+            cartScale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            )
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -110,7 +133,10 @@ fun HomeScreen(
             }
 
             // Right: Profile Avatar
-            IconButton(onClick = onNavigateToCart) {
+            IconButton(
+                onClick = onNavigateToCart,
+                modifier = Modifier.scale(cartScale.value)
+            ) {
                 BadgedBox(
                     badge = { 
                         if (cartItemCount > 0) {
@@ -126,6 +152,13 @@ fun HomeScreen(
                     )
                 }
             }
+        }
+
+        if (guestActiveOrderId != null) {
+            GuestActiveOrderBanner(
+                orderId = guestActiveOrderId,
+                onClick = onNavigateToGuestTracking
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

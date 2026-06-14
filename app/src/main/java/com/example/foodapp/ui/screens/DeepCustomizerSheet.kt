@@ -24,6 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +36,9 @@ import com.example.foodapp.data.models.CartItem
 import com.example.foodapp.data.models.Product
 import com.example.foodapp.theme.*
 import com.example.foodapp.ui.components.PrimaryButton
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
 
 @Composable
 fun DeepCustomizerSheet(
@@ -88,22 +95,55 @@ fun DeepCustomizerSheet(
                     .height(280.dp)
                     .background(DividerColor)
             ) {
-                AsyncImage(
-                    model = product.localImagePath,
-                    contentDescription = product.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                val sharedTransitionScope = com.example.foodapp.ui.navigation.LocalSharedTransitionScope.current
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                val animatedVisibilityScope = com.example.foodapp.ui.navigation.LocalAnimatedVisibilityScope.current
+
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                    with(sharedTransitionScope) {
+                        AsyncImage(
+                            model = product.localImagePath,
+                            contentDescription = product.name,
+                            modifier = Modifier.fillMaxSize().sharedElement(
+                                rememberSharedContentState(key = "image_${product.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            ),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = product.localImagePath,
+                        contentDescription = product.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 
                 if (onToggleFavorite != null) {
-                    val scale by androidx.compose.animation.core.animateFloatAsState(
-                        targetValue = if (isFavorite) 1.2f else 1.0f,
-                        animationSpec = androidx.compose.animation.core.spring(
-                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
-                            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
-                        ),
-                        label = "heart_scale"
-                    )
+                    val transition = updateTransition(targetState = isFavorite, label = "FavoriteTransitionSheet")
+                    
+                    val heartScale by transition.animateFloat(
+                        transitionSpec = {
+                            androidx.compose.animation.core.spring(
+                                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                                stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                            )
+                        },
+                        label = "HeartScaleSheet"
+                    ) { favorite ->
+                        if (favorite) 1.2f else 1.0f
+                    }
+
+                    val heartColor by transition.animateColor(
+                        transitionSpec = { androidx.compose.animation.core.tween(durationMillis = 300) },
+                        label = "HeartColorSheet"
+                    ) { favorite ->
+                        if (favorite) VAL_BRAND_PRIMARY else Color.Gray
+                    }
+
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
@@ -117,10 +157,10 @@ fun DeepCustomizerSheet(
                             Icon(
                                 imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Favorite",
-                                tint = if (isFavorite) VAL_BRAND_PRIMARY else Color.Gray,
+                                tint = heartColor,
                                 modifier = Modifier
                                     .size(24.dp)
-                                    .scale(scale)
+                                    .scale(heartScale)
                             )
                         }
                     }

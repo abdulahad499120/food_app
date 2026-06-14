@@ -4,14 +4,15 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material3.Text
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -94,8 +95,8 @@ fun BottomNavBar(
 fun BottomNavBarPreview() {
     val items = listOf(
         BottomNavItem("Home", Icons.Default.Home),
-        BottomNavItem("Order", Icons.Default.List),
-        BottomNavItem("Gift", Icons.Default.CardGiftcard),
+        BottomNavItem("Menu", Icons.Default.RestaurantMenu),
+        BottomNavItem("Orders", Icons.Default.List),
         BottomNavItem("Rewards", Icons.Default.Star),
         BottomNavItem("Profile", Icons.Default.Person)
     )
