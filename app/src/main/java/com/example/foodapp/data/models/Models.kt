@@ -178,14 +178,14 @@ data class RedemptionItem(
 
 @androidx.compose.runtime.Stable
 data class Gift(
-    val id: String,
-    val senderName: String,
-    val recipientEmail: String,
-    val amount: Double,
-    val message: String,
-    val themeUrl: String,
+    val id: String = "",
+    val senderName: String = "",
+    val recipientEmail: String = "",
+    val amount: Double = 0.0,
+    val message: String = "",
+    val themeUrl: String = "",
     val isClaimed: Boolean = false,
-    val timestamp: Long
+    val timestamp: Long = 0L
 )
 
 data class GiftTemplate(

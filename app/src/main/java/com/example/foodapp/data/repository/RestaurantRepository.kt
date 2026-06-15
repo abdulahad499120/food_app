@@ -31,7 +31,11 @@ class RestaurantRepository {
                 return@addSnapshotListener
             }
             val categories = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(Category::class.java)?.copy(id = doc.id)
+                try {
+                    doc.toObject(Category::class.java)?.copy(id = doc.id)
+                } catch (e: Exception) {
+                    null
+                }
             } ?: emptyList()
             trySend(categories)
         }
@@ -45,7 +49,11 @@ class RestaurantRepository {
                 return@addSnapshotListener
             }
             val products = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(FirestoreProduct::class.java)?.copy(productId = doc.id)
+                try {
+                    doc.toObject(FirestoreProduct::class.java)?.copy(productId = doc.id)
+                } catch (e: Exception) {
+                    null
+                }
             } ?: emptyList()
             trySend(products)
         }
@@ -63,10 +71,15 @@ class RestaurantRepository {
                     close(error)
                     return@addSnapshotListener
                 }
-                val overrides = snapshot?.documents?.associate { doc ->
-                    val override = doc.toObject(InventoryOverride::class.java) ?: InventoryOverride()
-                    doc.id to override
-                } ?: emptyMap()
+                val overrides = mutableMapOf<String, InventoryOverride>()
+                snapshot?.documents?.forEach { doc ->
+                    try {
+                        val override = doc.toObject(InventoryOverride::class.java) ?: InventoryOverride()
+                        overrides[doc.id] = override
+                    } catch (e: Exception) {
+                        // Skip invalid documents
+                    }
+                }
                 trySend(overrides)
             }
             awaitClose { listener.remove() }
@@ -80,7 +93,11 @@ class RestaurantRepository {
                 return@addSnapshotListener
             }
             val branches = snapshot?.documents?.mapNotNull { doc ->
-                doc.toObject(Branch::class.java)?.copy(branchId = doc.id)
+                try {
+                    doc.toObject(Branch::class.java)?.copy(branchId = doc.id)
+                } catch (e: Exception) {
+                    null
+                }
             } ?: emptyList()
             trySend(branches)
         }
