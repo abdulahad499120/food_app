@@ -411,8 +411,9 @@ fun FoodAppRoot(
 
                 composable(Screen.AddPayment.route) {
                     com.example.foodapp.ui.screens.AddEditPaymentScreen(
-                        authState = authState,
-                        onNavigateBack = { navController.popBackStack() }
+                        userId = userId ?: "",
+                        onBack = { navController.popBackStack() },
+                        onSuccess = { navController.popBackStack() }
                     )
                 }
 

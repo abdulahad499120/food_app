@@ -428,15 +428,15 @@ fun CheckoutScreen(
 
                     if (paymentsState is com.example.foodapp.ui.state.PaymentListUiState.Success) {
                         val payments = (paymentsState as com.example.foodapp.ui.state.PaymentListUiState.Success).payments
-                        payments.filter { it.category != com.example.foodapp.data.models.PaymentMethodCategory.CARD }.forEach { method ->
+                        payments.forEach { method ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .bounceClick {
-                                        val name = if (method.category == com.example.foodapp.data.models.PaymentMethodCategory.RAAST) {
-                                            "Raast: ${method.raastId}"
-                                        } else {
-                                            "${method.bankName} Account"
+                                        val name = when (method.category) {
+                                            com.example.foodapp.data.models.PaymentMethodCategory.RAAST -> "Raast: ${method.raastId}"
+                                            com.example.foodapp.data.models.PaymentMethodCategory.CARD -> "${method.type} ending in ${method.last4}"
+                                            else -> "${method.bankName} Account"
                                         }
                                         viewModel.setPaymentMethod(method.id, name)
                                         showPaymentSheet = false
@@ -447,10 +447,10 @@ fun CheckoutScreen(
                                 RadioButton(
                                     selected = uiState.paymentMethodId == method.id,
                                     onClick = {
-                                        val name = if (method.category == com.example.foodapp.data.models.PaymentMethodCategory.RAAST) {
-                                            "Raast: ${method.raastId}"
-                                        } else {
-                                            "${method.bankName} Account"
+                                        val name = when (method.category) {
+                                            com.example.foodapp.data.models.PaymentMethodCategory.RAAST -> "Raast: ${method.raastId}"
+                                            com.example.foodapp.data.models.PaymentMethodCategory.CARD -> "${method.type} ending in ${method.last4}"
+                                            else -> "${method.bankName} Account"
                                         }
                                         viewModel.setPaymentMethod(method.id, name)
                                         showPaymentSheet = false
@@ -458,10 +458,10 @@ fun CheckoutScreen(
                                     colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
                                 )
                                 Spacer(modifier = Modifier.width(16.dp))
-                                val title = if (method.category == com.example.foodapp.data.models.PaymentMethodCategory.RAAST) {
-                                    "Raast ${method.raastId}"
-                                } else {
-                                    "${method.bankName} ${method.accountNumber}"
+                                val title = when (method.category) {
+                                    com.example.foodapp.data.models.PaymentMethodCategory.RAAST -> "Raast ${method.raastId}"
+                                    com.example.foodapp.data.models.PaymentMethodCategory.CARD -> "${method.type} •••• ${method.last4}"
+                                    else -> "${method.bankName} ${method.accountNumber}"
                                 }
                                 Text(title, style = MaterialTheme.typography.bodyLarge)
                             }
@@ -551,6 +551,23 @@ fun CheckoutScreen(
 
     }
 
+
+    // Vaulted card DDC overlay — full-screen WebView that runs Cardinal Commerce's
+    // device fingerprinting silently, then hands the sessionId back to the ViewModel.
+    uiState.pendingVaultedDdc?.let { ddc ->
+        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+            SafepayWebViewScreen(
+                ddcUrl = ddc.ddcUrl,
+                accessToken = ddc.accessToken,
+                onSuccess = { sessionId ->
+                    viewModel.onVaultedCardDdcSuccess(sessionId, context)
+                },
+                onFailure = { msg ->
+                    viewModel.onVaultedCardDdcFailure("3DS verification failed: $msg")
+                }
+            )
+        }
+    }
 
     if (showSuccessAnimation) {
         com.example.foodapp.ui.components.CheckoutSuccessEffect(

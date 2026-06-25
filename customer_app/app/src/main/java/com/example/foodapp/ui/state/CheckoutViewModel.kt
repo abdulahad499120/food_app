@@ -22,13 +22,20 @@ class CheckoutViewModel : ViewModel() {
     private val orderRepository = OrderRepository()
     private val addressRepository = AddressRepository()
     private val rewardsRepository = com.example.foodapp.data.repository.RewardsRepository()
-    
+
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
     // Used to signal the UI to launch the Chrome Custom Tab
     private val _safepayCheckoutUrl = MutableStateFlow<String?>(null)
     val safepayCheckoutUrl: StateFlow<String?> = _safepayCheckoutUrl.asStateFlow()
+
+    // Held across the DDC WebView step for vaulted card checkout
+    private var _pendingTracker: String? = null
+    private var _pendingOrder: com.example.foodapp.data.models.Order? = null
+    private var _pendingPayWithStars: Boolean = false
+    private var _pendingIsGuest: Boolean = false
+    private var _pendingUserId: String? = null
 
     fun initialize(userId: String?) {
         if (userId == null) return
@@ -87,7 +94,10 @@ class CheckoutViewModel : ViewModel() {
             val cartState = CartManager.cartState.value
 
             // 1. Check if Safepay Card Payment is selected
-            if (_uiState.value.paymentMethodId == "safepay_card") {
+            val paymentId = _uiState.value.paymentMethodId
+            val isVaultedCard = paymentId != "COD" && paymentId != "safepay_card" && paymentId.contains("-") && paymentId.length > 20
+
+            if (paymentId == "safepay_card") {
                 try {
                     // Initialize Safepay Tracker
                     val trackerReq = TrackerRequest(
@@ -118,9 +128,31 @@ class CheckoutViewModel : ViewModel() {
                     _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initialize Safepay session: \${e.message}") }
                     return@launch
                 }
+            } else if (isVaultedCard) {
+                val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
+                val paymentRepo = com.example.foodapp.data.repository.PaymentRepository()
+                val safepayCustomerId = paymentRepo.getSafepayCustomerId(userId)
+
+                if (safepayCustomerId == null) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Customer ID not found for saved card") }
+                    return@launch
+                }
+
+                val result = safepayRepo.startVaultedCardPayment(
+                    customerId = safepayCustomerId,
+                    instrumentToken = paymentId,
+                    amount = cartState.total
+                )
+
+                if (result.isFailure) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to charge vaulted card: ${result.exceptionOrNull()?.message}") }
+                    return@launch
+                }
+
+                // If success, just fall through to place the order in Firestore!
             }
-            
-            // 2. Proceed to create order in Firestore
+
+            // COD and hosted Safepay checkout fall through here
             val totalQty = cartState.items.sumOf { it.quantity }
             val computedSector = if (fulfillmentMode == com.example.foodapp.ui.state.FulfillmentMode.DELIVERY && _uiState.value.address.city.isNotBlank()) {
                 _uiState.value.address.city
@@ -141,7 +173,7 @@ class CheckoutViewModel : ViewModel() {
                 branchLocation = branchGeoPoint,
                 deliveryLocation = deliveryGeoPoint ?: _uiState.value.address.location,
                 paymentMethodId = _uiState.value.paymentMethodId,
-                itemSummary = "\$totalQty Items",
+                itemSummary = "$totalQty Items",
                 generalSector = computedSector,
                 fulfillmentMode = fulfillmentMode.name
             )
@@ -164,8 +196,58 @@ class CheckoutViewModel : ViewModel() {
         }
     }
 
+    fun onVaultedCardDdcSuccess(sessionId: String, context: android.content.Context) {
+        val tracker = _pendingTracker ?: return
+        val order = _pendingOrder ?: return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(pendingVaultedDdc = null, status = CheckoutStatus.Loading) }
+
+            val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
+            val result = safepayRepo.completeVaultedCardPayment(tracker, sessionId)
+
+            if (result.isFailure) {
+                _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Payment failed: ${result.exceptionOrNull()?.message}") }
+                clearPendingVaultedState()
+                return@launch
+            }
+
+            orderRepository.placeOrder(order).fold(
+                onSuccess = { orderId ->
+                    if (_pendingPayWithStars) {
+                        _pendingUserId?.let { rewardsRepository.updateUserStars(it, -150) }
+                    }
+                    if (_pendingIsGuest) {
+                        val guestSessionRepo = com.example.foodapp.data.repository.GuestSessionRepository(context)
+                        guestSessionRepo.setGuestActiveOrderId(orderId)
+                    }
+                    clearPendingVaultedState()
+                    _uiState.update { it.copy(status = CheckoutStatus.Success, placedOrderId = orderId) }
+                },
+                onFailure = { exception ->
+                    clearPendingVaultedState()
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = exception.message ?: "Failed to place order") }
+                }
+            )
+        }
+    }
+
+    fun onVaultedCardDdcFailure(message: String) {
+        clearPendingVaultedState()
+        _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = message, pendingVaultedDdc = null) }
+    }
+
+    private fun clearPendingVaultedState() {
+        _pendingTracker = null
+        _pendingOrder = null
+        _pendingPayWithStars = false
+        _pendingIsGuest = false
+        _pendingUserId = null
+    }
+
     fun resetState() {
         _uiState.value = CheckoutUiState()
         _safepayCheckoutUrl.value = null
+        clearPendingVaultedState()
     }
 }

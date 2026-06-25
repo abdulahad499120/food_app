@@ -26,8 +26,31 @@ class PaymentViewModel(
         viewModelScope.launch {
             _uiState.update { PaymentListUiState.Loading }
             try {
-                repository.getUserPayments(userId).collect { payments ->
-                    _uiState.update { PaymentListUiState.Success(payments) }
+                // Fetch remote Safepay cards first
+                val safepayCustomerId = repository.getSafepayCustomerId(userId)
+                val remotePayments = mutableListOf<PaymentMethod>()
+                if (safepayCustomerId != null) {
+                    val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
+                    val vault = safepayRepo.getCustomerVault(safepayCustomerId)
+                    vault?.wallet?.forEach { item ->
+                        if (item.cybersource != null) {
+                            remotePayments.add(
+                                PaymentMethod(
+                                    id = item.token,
+                                    userId = userId,
+                                    category = com.example.foodapp.data.models.PaymentMethodCategory.CARD,
+                                    type = if (item.cybersource.bin.startsWith("4")) "Visa" else "Mastercard",
+                                    last4 = item.cybersource.lastFour,
+                                    expiry = "${item.cybersource.expiryMonth}${item.cybersource.expiryYear.takeLast(2)}",
+                                    isDefault = false
+                                )
+                            )
+                        }
+                    }
+                }
+
+                repository.getUserPayments(userId).collect { localPayments ->
+                    _uiState.update { PaymentListUiState.Success(localPayments + remotePayments) }
                 }
             } catch (e: Exception) {
                 _uiState.update { PaymentListUiState.Error(e.message ?: "Failed to load payments") }

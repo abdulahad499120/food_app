@@ -16,6 +16,26 @@ class PaymentRepository {
     private val db = FirebaseFirestore.getInstance()
     private val usersCollection = db.collection("users")
 
+    suspend fun getSafepayCustomerId(userId: String): String? {
+        return try {
+            val doc = usersCollection.document(userId).get().await()
+            doc.getString("safepayCustomerId")
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun setSafepayCustomerId(userId: String, customerId: String) {
+        try {
+            usersCollection.document(userId).set(
+                mapOf("safepayCustomerId" to customerId),
+                com.google.firebase.firestore.SetOptions.merge()
+            ).await()
+        } catch (e: Exception) {
+            android.util.Log.e("PaymentRepo", "Failed to save safepayCustomerId: ${e.message}")
+        }
+    }
+
     /**
      * ## H2 Observe User Payments
      * 

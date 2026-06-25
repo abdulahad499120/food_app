@@ -26,6 +26,11 @@ android {
         
         val mapboxAccessToken = localProps.getProperty("MAPBOX_ACCESS_TOKEN") ?: ""
         resValue("string", "mapbox_access_token", mapboxAccessToken)
+        
+        val safepayPublicKey = localProps.getProperty("SAFEPAY_PUBLIC_KEY") ?: ""
+        val safepaySecretKey = localProps.getProperty("SAFEPAY_SECRET_KEY") ?: ""
+        buildConfigField("String", "SAFEPAY_PUBLIC_KEY", "\"$safepayPublicKey\"")
+        buildConfigField("String", "SAFEPAY_SECRET_KEY", "\"$safepaySecretKey\"")
     }
 
     signingConfigs {
@@ -60,7 +65,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
       resValues = true
     }
