@@ -1,0 +1,1088 @@
+{
+  "brand": {
+    "name": "Ice Land - Adda Plot",
+    "logo": "https://images.deliveryhero.io/image/fd-pk/LH/r2ki-hero.jpg",
+    "rating": 4.4,
+    "minimum_order": 299
+  },
+  "categories": [
+    {
+      "id": 2766777,
+      "name": "Salads"
+    },
+    {
+      "id": 2766778,
+      "name": "Savories"
+    },
+    {
+      "id": 2766779,
+      "name": "Ice Cream"
+    },
+    {
+      "id": 2766780,
+      "name": "Ice Cream Shakes"
+    },
+    {
+      "id": 2766781,
+      "name": "Energy Shakes"
+    },
+    {
+      "id": 2766782,
+      "name": "Milkshakes"
+    },
+    {
+      "id": 2766783,
+      "name": "Beverages"
+    },
+    {
+      "id": 2766784,
+      "name": "Fresh Juices"
+    }
+  ],
+  "products": [
+    {
+      "id": 91342877,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Sweet Salad",
+      "description": "Sweet creamy fruit salad.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954401.jpg?width=%s"
+    },
+    {
+      "id": 91342878,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Russian Salad",
+      "description": "Creamy savoury salad with fruit.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954402.jpg?width=%s"
+    },
+    {
+      "id": 91342879,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Creamy Spaghetti Salad",
+      "description": "Creamy spaghetti salad with vegetables.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471447.jpg?width=%s"
+    },
+    {
+      "id": 91342880,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Creamy Macaroni Salad",
+      "description": "Creamy pasta salad.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954404.jpg?width=%s"
+    },
+    {
+      "id": 91342881,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Spicy Macaroni Salad",
+      "description": "Spicy pasta salad with vegetables.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954405.jpg?width=%s"
+    },
+    {
+      "id": 91342882,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Spicy Chana Salad Salad",
+      "description": "Spicy chickpea salad.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954406.jpg?width=%s"
+    },
+    {
+      "id": 91342883,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Mixed Salad",
+      "description": "Mixed vegetable salad.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954407.jpg?width=%s"
+    },
+    {
+      "id": 91342884,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Spicy Spaghetti Salad",
+      "description": "Spaghetti salad with a spicy seasoning and creamy topping.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954408.jpg?width=%s"
+    },
+    {
+      "id": 91342885,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Lobia Apple Salad",
+      "description": "Serves 1",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954409.jpg?width=%s"
+    },
+    {
+      "id": 91342886,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Apple Caple Salad",
+      "description": "Serves 1",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954458.jpg?width=%s"
+    },
+    {
+      "id": 91342887,
+      "category_id": 2766777,
+      "category_name": "Salads",
+      "name": "Pineapple Salad",
+      "description": "Serves 1",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954459.jpg?width=%s"
+    },
+    {
+      "id": 91342888,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Papri Dahi Bhallay",
+      "description": "Dahi Bhallay with crisp savoury Papri topping.",
+      "price": 225,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954313.jpg?width=%s"
+    },
+    {
+      "id": 91342889,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Special Cream Bhallay",
+      "description": "Creamy Bhallay with chaat masala on top.",
+      "price": 342,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954314.jpg?width=%s"
+    },
+    {
+      "id": 91342890,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Ice Cream Chaat",
+      "description": "Sweet fruit chaat with ice cream on top.",
+      "price": 486,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954315.jpg?width=%s"
+    },
+    {
+      "id": 91342891,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Fruit Chaat",
+      "description": "Mixed fruits cut up into this chaat.",
+      "price": 342,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954316.jpg?width=%s"
+    },
+    {
+      "id": 91342892,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Cream Chaat",
+      "description": "Fruits cut up into a creamy sweet sauce.",
+      "price": 342,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954317.jpg?width=%s"
+    },
+    {
+      "id": 91342893,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Chana Chaat",
+      "description": "Chana chaat with yoghurt, chaat masala and vegetables.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954318.jpg?width=%s"
+    },
+    {
+      "id": 91342894,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Mixed Chaat",
+      "description": "Sliced fruits mixed with a tasty juice.",
+      "price": 315,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954319.jpg?width=%s"
+    },
+    {
+      "id": 91342895,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Gol Gappay",
+      "description": "Six gol gappay with chickpea filling and tamarind water.",
+      "price": 360,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954361.jpg?width=%s"
+    },
+    {
+      "id": 91342896,
+      "category_id": 2766778,
+      "category_name": "Savories",
+      "name": "Papri Chaat",
+      "description": "Chickpeas, yoghurt and vegetables topped with crisp papri.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471464.jpg?width=%s"
+    },
+    {
+      "id": 91342903,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Mango Ice Cream",
+      "description": "Mango flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955468.jpg?width=%s"
+    },
+    {
+      "id": 91342904,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Strawberry Ice Cream",
+      "description": "Strawberry flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955469.jpg?width=%s"
+    },
+    {
+      "id": 91342905,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Tutti Frutti Ice Cream",
+      "description": "Tutti Frutti flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955470.jpg?width=%s"
+    },
+    {
+      "id": 91342906,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Vanilla Ice Cream",
+      "description": "Plain vanilla flavoured ice cream.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955471.jpg?width=%s"
+    },
+    {
+      "id": 91342907,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Chocolate Ice Cream",
+      "description": "Chocolate flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955472.jpg?width=%s"
+    },
+    {
+      "id": 91342908,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Pineapple Ice Cream",
+      "description": "Pineapple flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955473.jpg?width=%s"
+    },
+    {
+      "id": 91342910,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Khajoor Ice Cream",
+      "description": "Date flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955475.jpg?width=%s"
+    },
+    {
+      "id": 91342911,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Kulfa Ice Cream",
+      "description": "Classic kulfi in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471481.jpg?width=%s"
+    },
+    {
+      "id": 91342912,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Pista Badam Ice Cream",
+      "description": "Pistachio and almond ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955477.jpg?width=%s"
+    },
+    {
+      "id": 91342913,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Blueberry Ice Cream",
+      "description": "Blueberry flavoured ice cream in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471483.jpg?width=%s"
+    },
+    {
+      "id": 91342914,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Vanilla Chip Ice Cream",
+      "description": "Chocolate chip ice cream with a vanilla base in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955479.jpg?width=%s"
+    },
+    {
+      "id": 91342915,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Chocolate Chip Ice Cream",
+      "description": "Chocolate chip ice cream with a chocolate base in a cup.",
+      "price": 324,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955480.jpg?width=%s"
+    },
+    {
+      "id": 91342916,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Mango Slice Ice Cream",
+      "description": "Mango ice cream with slices of mango on top in a cup.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955489.jpg?width=%s"
+    },
+    {
+      "id": 91342917,
+      "category_id": 2766779,
+      "category_name": "Ice Cream",
+      "name": "Special Tutti Frutti Ice Cream",
+      "description": "Special tutti frutti ice cream dessert with wafers.",
+      "price": 675,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5955490.jpg?width=%s"
+    },
+    {
+      "id": 91342918,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Kitkat Ice Cream Shake",
+      "description": "Kitkat flavoured ice cream shake with a chocolate base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954852.jpg?width=%s"
+    },
+    {
+      "id": 91342919,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Mango Ice Cream Shake",
+      "description": "Mango flavoured ice cream shake with a vanilla base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954853.jpg?width=%s"
+    },
+    {
+      "id": 91342920,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Snickers Ice Cream Shake",
+      "description": "Snickers flavoured ice cream milk shake with a vanilla base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954854.jpg?width=%s"
+    },
+    {
+      "id": 91342921,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Oreo Ice Cream Shake",
+      "description": "Oreo flavoured ice cream shake with a vanilla base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954855.jpg?width=%s"
+    },
+    {
+      "id": 91342923,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Mars Ice Cream Shake",
+      "description": "Mars flavoured ice cream shake with a vanilla base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954857.jpg?width=%s"
+    },
+    {
+      "id": 91342924,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Cadbury Ice Cream Shake",
+      "description": "Cadbury flavoured ice cream shake with a vanilla base.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954858.jpg?width=%s"
+    },
+    {
+      "id": 91342925,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Cold Coffee Ice Cream Shake",
+      "description": "A tasty blend of coffee and vanilla ice cream in a milkshake form.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954859.jpg?width=%s"
+    },
+    {
+      "id": 91342926,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Brownies Ice Cream Shake",
+      "description": "Delicious chocolate brownies blended with vanilla ice-cream into a milkshake form.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954860.jpg?width=%s"
+    },
+    {
+      "id": 91342927,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Vanilla Dream Ice Cream Shake",
+      "description": "Vanilla ice cream blended into a dreamy milkshake form.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954861.jpg?width=%s"
+    },
+    {
+      "id": 91342928,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Special Tutti Frutti Ice Cream Shake",
+      "description": "Tutti frutti ice cream blended with a vanilla base into a milkshake form.",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954862.jpg?width=%s"
+    },
+    {
+      "id": 91342929,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Coconut Ice Cream Shake",
+      "description": "Coconut blended with a vanilla base.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954863.jpg?width=%s"
+    },
+    {
+      "id": 91342930,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Mango Ice Cream Shake",
+      "description": "Mango icecream blended into a milkshake with a vanilla base.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471500.jpg?width=%s"
+    },
+    {
+      "id": 91342931,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Strawberry Ice Cream Shake",
+      "description": "Strawberry flavoured ice cream blended into a milkshake form with a vanilla base.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471501.jpg?width=%s"
+    },
+    {
+      "id": 91342932,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Vanilla Ice Cream Shake",
+      "description": "Plain vanilla ice cream blended into a milkshake form.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471502.jpg?width=%s"
+    },
+    {
+      "id": 91342933,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Chocolate Ice Cream Shake",
+      "description": "Chocolate ice cream blended into a milkshake form and served with chocolate sauce.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471503.jpg?width=%s"
+    },
+    {
+      "id": 91342934,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Chocolate Chip Ice Cream Shake",
+      "description": "Chocolate ice cream shake with chocolate chips.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954868.jpg?width=%s"
+    },
+    {
+      "id": 91342935,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Kulfa Ice Cream Shake",
+      "description": "Kulfi ice cream blended into a milkshake form.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954869.jpg?width=%s"
+    },
+    {
+      "id": 91342936,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Tutti Frutti Ice Cream Shake",
+      "description": "Tutti Frutti Ice Cream blended into milkshake form.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471506.jpg?width=%s"
+    },
+    {
+      "id": 91342937,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Chiku Ice Cream Shake",
+      "description": "Chiku Ice Cream blended into milkshake form.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954871.jpg?width=%s"
+    },
+    {
+      "id": 91342938,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Pineapple Ice Cream Shake",
+      "description": "Pineapple ice cream blended into shake form.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954872.jpg?width=%s"
+    },
+    {
+      "id": 91342939,
+      "category_id": 2766780,
+      "category_name": "Ice Cream Shakes",
+      "name": "Sweet Heart Ice Cream Shake",
+      "description": "Delicious pink drink for the summer.",
+      "price": 765,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954873.jpg?width=%s"
+    },
+    {
+      "id": 91342940,
+      "category_id": 2766781,
+      "category_name": "Energy Shakes",
+      "name": "Ajwa Khajoor Shake",
+      "description": "A refreshing shake made with Ajwa dates.",
+      "price": 1251,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954265.jpg?width=%s"
+    },
+    {
+      "id": 91342941,
+      "category_id": 2766781,
+      "category_name": "Energy Shakes",
+      "name": "Mabroom Khajoor Shake",
+      "description": "A refreshing shake made with Mabroom dates.",
+      "price": 1251,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954266.jpg?width=%s"
+    },
+    {
+      "id": 91342942,
+      "category_id": 2766781,
+      "category_name": "Energy Shakes",
+      "name": "Amber Khajoor Shake",
+      "description": "A refreshing shake made with Amber dates.",
+      "price": 1251,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954267.jpg?width=%s"
+    },
+    {
+      "id": 91342943,
+      "category_id": 2766781,
+      "category_name": "Energy Shakes",
+      "name": "Irani Khajoor Shake",
+      "description": "A refreshing shake made with Irani dates.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954268.jpg?width=%s"
+    },
+    {
+      "id": 91342944,
+      "category_id": 2766781,
+      "category_name": "Energy Shakes",
+      "name": "Kalma Khajoor Shake",
+      "description": "A refreshing shake made with Kalma dates.",
+      "price": 1251,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954269.jpg?width=%s"
+    },
+    {
+      "id": 91342945,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Strawberry Milkshake",
+      "description": "Strawberries blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471515.jpg?width=%s"
+    },
+    {
+      "id": 91342946,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Special Cocktail Milkshake",
+      "description": "Bold and creamy with a tropical fruit punch.",
+      "price": 702,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954705.jpg?width=%s"
+    },
+    {
+      "id": 91342947,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Banana Milkshake",
+      "description": "Bananas blended into a refreshing milkshake form",
+      "price": 270,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471517.jpg?width=%s"
+    },
+    {
+      "id": 91342948,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Mango Milkshake",
+      "description": "Mangoes blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471518.jpg?width=%s"
+    },
+    {
+      "id": 91342949,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Apple Milkshake",
+      "description": "Apples blended into a refreshing milkshake form.",
+      "price": 342,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954708.jpg?width=%s"
+    },
+    {
+      "id": 91342950,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Pineapple Milkshake",
+      "description": "Pineapple blended into a refreshing milkshake form.",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471520.jpg?width=%s"
+    },
+    {
+      "id": 91342951,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Chiku Milkshake",
+      "description": "Chiku blended into a refreshing milkshake form.",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471521.jpg?width=%s"
+    },
+    {
+      "id": 91342952,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Khajoor Milkshake",
+      "description": "Dates blended into a refreshing milkshake form.",
+      "price": 360,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954711.jpg?width=%s"
+    },
+    {
+      "id": 91342953,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Khoya Khajoor Milkshake",
+      "description": "Khoya Dates blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954712.jpg?width=%s"
+    },
+    {
+      "id": 91342954,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Badam Khajoor Milkshake",
+      "description": "Almond dates blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954713.jpg?width=%s"
+    },
+    {
+      "id": 91342955,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Peach Milkshake",
+      "description": "Peach blended into a refreshing milkshake form.",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954714.jpg?width=%s"
+    },
+    {
+      "id": 91342956,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Badam Milkshake",
+      "description": "Almonds blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954715.jpg?width=%s"
+    },
+    {
+      "id": 91342957,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Kaju Badam Milkshake",
+      "description": "Cashew nuts and Almonds blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954716.jpg?width=%s"
+    },
+    {
+      "id": 91342958,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Anjeer Milkshake",
+      "description": "Figs blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954717.jpg?width=%s"
+    },
+    {
+      "id": 91342959,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Cocktail Dry Fruit Milkshake",
+      "description": "A hearty shake with a rich mix of dry fruits.",
+      "price": 990,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954718.jpg?width=%s"
+    },
+    {
+      "id": 91342960,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Pista Badam Milkshake",
+      "description": "Pistachio and Almonds blended into a refreshing milkshake form.",
+      "price": 990,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954719.jpg?width=%s"
+    },
+    {
+      "id": 91342961,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Chilgoza Milkshake",
+      "description": "Pine Nuts blended into a refreshing milkshake form.",
+      "price": 1980,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954720.jpg?width=%s"
+    },
+    {
+      "id": 91342962,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Badam Khoya Milkshake",
+      "description": "Almonds and Khoya blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954721.jpg?width=%s"
+    },
+    {
+      "id": 91342963,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Kaju Khoya Milkshake",
+      "description": "Cashew Nut and Khoya blended into a refreshing milkshake form.",
+      "price": 882,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954722.jpg?width=%s"
+    },
+    {
+      "id": 91342964,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Banana Khoya Milkshake",
+      "description": "Bananas and Khoya blended into a refreshing milkshake form.",
+      "price": 450,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954723.jpg?width=%s"
+    },
+    {
+      "id": 91342965,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Mango Smoothie Milkshake",
+      "description": "Mangoes and yoghurt blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954724.jpg?width=%s"
+    },
+    {
+      "id": 91342966,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Strawberry Smoothie Milkshake",
+      "description": "Strawberries and yoghurt blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954725.jpg?width=%s"
+    },
+    {
+      "id": 91342967,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Chiku Smoothie Milkshake",
+      "description": "Chiku fruit and yoghurt blended into a refreshing milkshake form.",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471537.jpg?width=%s"
+    },
+    {
+      "id": 91342968,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Cocktail Milkshake",
+      "description": "Smooth and decadent with tropical flair.",
+      "price": 504,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954727.jpg?width=%s"
+    },
+    {
+      "id": 91342969,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Kiwi Milkshake",
+      "description": "Kiwi fruit and yoghurt blended into a refreshing milkshake form.",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954728.jpg?width=%s"
+    },
+    {
+      "id": 91342971,
+      "category_id": 2766782,
+      "category_name": "Milkshakes",
+      "name": "Pina Colada Milkshake",
+      "description": "Pineapples and yoghurt blended into a refreshing milkshake form.",
+      "price": 585,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954730.jpg?width=%s"
+    },
+    {
+      "id": 91342972,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Mint Margarita",
+      "description": "Serves 1",
+      "price": 315,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954169.jpg?width=%s"
+    },
+    {
+      "id": 91342973,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Lemon Lite Soda",
+      "description": "Serves 1",
+      "price": 315,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954170.jpg?width=%s"
+    },
+    {
+      "id": 91342974,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Pink Lemon Lite Soda",
+      "description": "Serves 1",
+      "price": 315,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954171.jpg?width=%s"
+    },
+    {
+      "id": 91342975,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Doodh Soda",
+      "description": "Serves 1",
+      "price": 315,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954172.jpg?width=%s"
+    },
+    {
+      "id": 91342976,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Ice Cream Soda",
+      "description": "Serves 1",
+      "price": 585,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954173.jpg?width=%s"
+    },
+    {
+      "id": 91342977,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Vanilla Ice Cream Soda",
+      "description": "Serves 1",
+      "price": 585,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954174.jpg?width=%s"
+    },
+    {
+      "id": 91342978,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Strawberry Ice Cream Soda",
+      "description": "Serves 1",
+      "price": 585,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954175.jpg?width=%s"
+    },
+    {
+      "id": 91342981,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Special Pina Colada",
+      "description": "Serves 1",
+      "price": 810,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954220.jpg?width=%s"
+    },
+    {
+      "id": 91342982,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Mango Lassi",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954703.jpg?width=%s"
+    },
+    {
+      "id": 91342983,
+      "category_id": 2766783,
+      "category_name": "Beverages",
+      "name": "Strawberry Lassi",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954731.jpg?width=%s"
+    },
+    {
+      "id": 91342986,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Mosambi Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954551.jpg?width=%s"
+    },
+    {
+      "id": 91342987,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Kinnow Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471557.jpg?width=%s"
+    },
+    {
+      "id": 91342988,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Cocktail Juice",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954554.jpg?width=%s"
+    },
+    {
+      "id": 91342989,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Special Cocktail Juice",
+      "description": "Serves 1",
+      "price": 702,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954555.jpg?width=%s"
+    },
+    {
+      "id": 91342990,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Aloo Bukhara Juice",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954556.jpg?width=%s"
+    },
+    {
+      "id": 91342992,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Chiku Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471562.jpg?width=%s"
+    },
+    {
+      "id": 91342994,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Falsa Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471564.jpg?width=%s"
+    },
+    {
+      "id": 91342995,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Strawberry Juice",
+      "description": "Serves 1",
+      "price": 495,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954561.jpg?width=%s"
+    },
+    {
+      "id": 91342996,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Grapefruit Juice",
+      "description": "Serves 1",
+      "price": 342,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471566.jpg?width=%s"
+    },
+    {
+      "id": 91342997,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Grapes Juice",
+      "description": "Pure, refreshing juice bursting with grape essence.",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471567.jpg?width=%s"
+    },
+    {
+      "id": 91342999,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Papita Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954565.jpg?width=%s"
+    },
+    {
+      "id": 91343000,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Watermelon Juice",
+      "description": "A refreshing beverage made by extracting the juice from ripe watermelons, Known for its hydrating and sweet taste, watermelon juice is a popular choice, especially during hot weather, for its cooling and thirst quenching properties.",
+      "price": 360,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471570.jpg?width=%s"
+    },
+    {
+      "id": 91343002,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Pineapple Juice",
+      "description": "Serves 1",
+      "price": 567,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471572.jpg?width=%s"
+    },
+    {
+      "id": 91343003,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Apple Juice",
+      "description": "Serves 1",
+      "price": 360,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471573.jpg?width=%s"
+    },
+    {
+      "id": 91343004,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Mango Juice",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954570.jpg?width=%s"
+    },
+    {
+      "id": 91343005,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Fruit Punch Juice",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954571.jpg?width=%s"
+    },
+    {
+      "id": 91343007,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Kiwi Juice",
+      "description": "Serves 1",
+      "price": 540,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954573.jpg?width=%s"
+    },
+    {
+      "id": 91343008,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Peach Juice",
+      "description": "Serves 1",
+      "price": 405,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/12471578.jpg?width=%s"
+    },
+    {
+      "id": 91343009,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Pina Colada Juice",
+      "description": "Serves 1",
+      "price": 585,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954575.jpg?width=%s"
+    },
+    {
+      "id": 91343010,
+      "category_id": 2766784,
+      "category_name": "Fresh Juices",
+      "name": "Cherry Juice",
+      "description": "Serves 1",
+      "price": 675,
+      "image": "https://images.deliveryhero.io/image/fd-pk/Products/5954576.jpg?width=%s"
+    }
+  ]
+}
