@@ -80,7 +80,7 @@ function AuthenticatedApp({ activeTab, setActiveTab, handleLogout, user }: {
   user: User
 }) {
   const { orders, loading: ordersLoading, updateOrderStatus } = useOrders();
-  const { products, loading: productsLoading, updateProductAvailability } = useProducts();
+  const { products, loading: productsLoading, updateProductAvailability, addProduct, updateProduct, deleteProduct } = useProducts();
 
   return (
     <div className="flex h-screen w-screen bg-gray-100 overflow-hidden font-sans">
@@ -140,7 +140,13 @@ function AuthenticatedApp({ activeTab, setActiveTab, handleLogout, user }: {
           productsLoading ? (
             <div className="flex h-full w-full items-center justify-center font-bold text-gray-500">Connecting to Inventory...</div>
           ) : (
-            <InventoryManager products={products} onToggleAvailability={updateProductAvailability} />
+            <InventoryManager 
+              products={products} 
+              onToggleAvailability={updateProductAvailability} 
+              onAddProduct={addProduct}
+              onUpdateProduct={updateProduct}
+              onDeleteProduct={deleteProduct}
+            />
           )
         )}
       </div>

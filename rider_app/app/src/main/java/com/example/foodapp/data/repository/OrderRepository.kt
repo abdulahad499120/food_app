@@ -208,8 +208,7 @@ class OrderRepository {
                     "riderId" to riderId,
                     "riderName" to riderName,
                     "riderVehicle" to riderVehicle,
-                    "riderPhone" to riderPhone,
-                    "orderStatus" to com.example.foodapp.data.models.OrderStatus.RIDER_ASSIGNED.name
+                    "riderPhone" to riderPhone
                 ))
             }.await()
             Result.success(Unit)
@@ -230,7 +229,8 @@ class OrderRepository {
                 
                 val orders = snapshot?.documents?.mapNotNull { doc ->
                     try {
-                        doc.toObject(Order::class.java)?.copy(orderId = doc.id)
+                        val order = doc.toObject(Order::class.java)?.copy(orderId = doc.id)
+                        if (order?.riderId == null) order else null
                     } catch (e: Exception) {
                         null
                     }

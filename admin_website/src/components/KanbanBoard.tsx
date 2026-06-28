@@ -35,6 +35,7 @@ export const KanbanBoard: React.FC<Props> = ({ orders, onUpdateStatus }) => {
         audioRef.current.pause();
         audioRef.current.currentTime = 0; // Reset to beginning for next alarm
       }
+    }
   }, [pendingOrders.length]);
 
   // Auto-transition orders from KITCHEN PREP to READY_FOR_HANDOFF when prepTime expires

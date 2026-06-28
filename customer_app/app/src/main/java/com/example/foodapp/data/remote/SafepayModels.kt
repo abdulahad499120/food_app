@@ -163,7 +163,15 @@ data class SafepayEnrollmentResponse(
     
     @Serializable
     data class CybersourceAction(
-        @SerialName("kind") val kind: String
+        @SerialName("kind") val kind: String,
+        @SerialName("payload") val payload: ChallengePayload? = null
+    )
+
+    @Serializable
+    data class ChallengePayload(
+        @SerialName("url") val url: String? = null,
+        @SerialName("payload") val jwtPayload: String? = null,
+        @SerialName("transaction_id") val transactionId: String? = null
     )
 }
 

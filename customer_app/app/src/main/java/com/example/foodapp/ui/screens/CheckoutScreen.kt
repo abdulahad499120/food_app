@@ -367,6 +367,68 @@ fun CheckoutScreen(
                         Text("Edit", color = BrandPrimary)
                     }
                 }
+                
+                // Native Card Input Form
+                AnimatedVisibility(
+                    visible = uiState.paymentMethodId == "native_card",
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        com.example.foodapp.ui.components.TextInput(
+                            value = uiState.cardNumber,
+                            onValueChange = { viewModel.updateCardNumber(it) },
+                            label = "Card Number",
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            com.example.foodapp.ui.components.TextInput(
+                                value = uiState.cardExpMonth,
+                                onValueChange = { viewModel.updateCardExpMonth(it) },
+                                label = "MM",
+                                modifier = Modifier.weight(1f),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            com.example.foodapp.ui.components.TextInput(
+                                value = uiState.cardExpYear,
+                                onValueChange = { viewModel.updateCardExpYear(it) },
+                                label = "YYYY",
+                                modifier = Modifier.weight(1f),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            com.example.foodapp.ui.components.TextInput(
+                                value = uiState.cardCvv,
+                                onValueChange = { viewModel.updateCardCvv(it) },
+                                label = "CVV",
+                                modifier = Modifier.weight(1f),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .bounceClick { viewModel.toggleSaveCardForLater(!uiState.saveCardForLater) }
+                        ) {
+                            Checkbox(
+                                checked = uiState.saveCardForLater,
+                                onCheckedChange = { viewModel.toggleSaveCardForLater(it) },
+                                colors = CheckboxDefaults.colors(checkedColor = BrandPrimary)
+                            )
+                            Text(text = "Save this card for future checkouts", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
             }
         }
         
@@ -403,12 +465,35 @@ fun CheckoutScreen(
                         Text("Cash on Delivery", style = MaterialTheme.typography.bodyLarge)
                     }
                     
+                    // Native Card Option
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .bounceClick {
+                                viewModel.setPaymentMethod("native_card", "Credit / Debit Card")
+                                showPaymentSheet = false
+                            }
+                            .padding(vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = uiState.paymentMethodId == "native_card",
+                            onClick = {
+                                viewModel.setPaymentMethod("native_card", "Credit / Debit Card")
+                                showPaymentSheet = false
+                            },
+                            colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Credit / Debit Card", style = MaterialTheme.typography.bodyLarge)
+                    }
+
                     // Safepay Hosted Checkout Option
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .bounceClick {
-                                viewModel.setPaymentMethod("safepay_card", "Credit / Debit Card")
+                                viewModel.setPaymentMethod("safepay_card", "Safepay Checkout")
                                 showPaymentSheet = false
                             }
                             .padding(vertical = 12.dp),
@@ -417,13 +502,13 @@ fun CheckoutScreen(
                         RadioButton(
                             selected = uiState.paymentMethodId == "safepay_card",
                             onClick = {
-                                viewModel.setPaymentMethod("safepay_card", "Credit / Debit Card")
+                                viewModel.setPaymentMethod("safepay_card", "Safepay Checkout")
                                 showPaymentSheet = false
                             },
                             colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text("Credit / Debit Card", style = MaterialTheme.typography.bodyLarge)
+                        Text("Safepay Hosted Checkout", style = MaterialTheme.typography.bodyLarge)
                     }
 
                     if (paymentsState is com.example.foodapp.ui.state.PaymentListUiState.Success) {
@@ -564,6 +649,21 @@ fun CheckoutScreen(
                 },
                 onFailure = { msg ->
                     viewModel.onVaultedCardDdcFailure("3DS verification failed: $msg")
+                }
+            )
+        }
+    }
+    
+    // 3DS Challenge WebView (Bank OTP)
+    uiState.pendingChallengeUrl?.let { url ->
+        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+            SafepayChallengeWebView(
+                challengeUrl = url,
+                onSuccess = {
+                    viewModel.onChallengeSuccess(context)
+                },
+                onFailure = {
+                    viewModel.onChallengeFailure()
                 }
             )
         }

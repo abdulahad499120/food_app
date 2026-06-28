@@ -33,12 +33,13 @@ class SafepayRepository {
         }
     }
 
-    suspend fun initializeTracker(customerId: String): String? {
+    suspend fun initializeTracker(customerId: String, mode: String = "instrument"): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val req = SafepayTrackerRequest(
                     user = customerId,
                     merchantApiKey = publicKey,
+                    mode = mode,
                     entryMode = "raw"
                 )
                 val response = api.initializeTracker(req)
@@ -74,7 +75,13 @@ class SafepayRepository {
         }
     }
 
-    suspend fun submitEnrollment(tracker: String, sessionId: String, street: String, city: String, postalCode: String, country: String): Boolean {
+    sealed class EnrollmentResult {
+        object Success : EnrollmentResult()
+        data class RequiresChallenge(val url: String, val jwt: String?, val transactionId: String?) : EnrollmentResult()
+        data class Error(val message: String) : EnrollmentResult()
+    }
+
+    suspend fun submitEnrollment(tracker: String, sessionId: String, street: String, city: String, postalCode: String, country: String): EnrollmentResult {
         return withContext(Dispatchers.IO) {
             try {
                 val req = SafepayEnrollmentRequest(
@@ -93,12 +100,23 @@ class SafepayRepository {
                     )
                 )
                 val response = api.submitEnrollment(tracker, req)
-                // If it returns next_actions for Challenge, wait, it might return NOOP or it might fail
-                // For a vault/instrument, it might just succeed.
-                response.status.message == "success"
+                
+                val cyberSourceAction = response.data?.tracker?.nextActions?.cybersource
+                if (cyberSourceAction?.kind == "challenge") {
+                    val payload = cyberSourceAction.payload
+                    EnrollmentResult.RequiresChallenge(
+                        url = payload?.url ?: "",
+                        jwt = payload?.jwtPayload,
+                        transactionId = payload?.transactionId
+                    )
+                } else if (response.status.message == "success") {
+                    EnrollmentResult.Success
+                } else {
+                    EnrollmentResult.Error(response.status.errors.firstOrNull() ?: "Unknown enrollment error")
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
-                false
+                EnrollmentResult.Error(e.message ?: "Network error")
             }
         }
     }
@@ -164,25 +182,22 @@ class SafepayRepository {
         }
     }
 
-    suspend fun completeVaultedCardPayment(tracker: String, sessionId: String): Result<Unit> {
+    suspend fun completeVaultedCardPayment(tracker: String, sessionId: String): EnrollmentResult {
         return withContext(Dispatchers.IO) {
             try {
-                val enrollReq = SafepayEnrollmentRequest(
-                    payload = SafepayEnrollmentRequest.EnrollmentPayload(
-                        billing = SafepayEnrollmentRequest.BillingInfo(
-                            street1 = "123 Test St",
-                            city = "Lahore",
-                            postalCode = "54000",
-                            country = "PK"
-                        ),
-                        authSetup = SafepayEnrollmentRequest.AuthSetupConfig(
-                            successUrl = "https://www.getsafepay.com/success",
-                            failureUrl = "https://www.getsafepay.com/failure",
-                            deviceFingerprintSessionId = sessionId
-                        )
-                    )
+                // For native payment / saving card, we reuse submitEnrollment logic
+                val enrollResult = submitEnrollment(
+                    tracker = tracker, 
+                    sessionId = sessionId, 
+                    street = "123 Test St", 
+                    city = "Lahore", 
+                    postalCode = "54000", 
+                    country = "PK"
                 )
-                api.submitEnrollment(tracker, enrollReq)
+                
+                if (enrollResult is EnrollmentResult.RequiresChallenge || enrollResult is EnrollmentResult.Error) {
+                    return@withContext enrollResult
+                }
 
                 val authReq = SafepayAuthorizationRequest(
                     payload = SafepayAuthorizationRequest.AuthFinalPayload()
@@ -190,17 +205,17 @@ class SafepayRepository {
                 val authResp = api.submitAuthorization(tracker, authReq)
 
                 if (authResp.status.message == "success") {
-                    Result.success(Unit)
+                    EnrollmentResult.Success
                 } else {
-                    Result.failure(Exception("Authorization failed: ${authResp.status.message}"))
+                    EnrollmentResult.Error("Authorization failed: ${authResp.status.message}")
                 }
             } catch (e: retrofit2.HttpException) {
                 val errorBody = try { e.response()?.errorBody()?.string() } catch (ignored: Exception) { null }
                 e.printStackTrace()
-                Result.failure(Exception("HTTP ${e.code()}: $errorBody"))
+                EnrollmentResult.Error("HTTP ${e.code()}: $errorBody")
             } catch (e: Exception) {
                 e.printStackTrace()
-                Result.failure(e)
+                EnrollmentResult.Error(e.message ?: "Unknown Error")
             }
         }
     }

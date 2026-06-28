@@ -42,6 +42,7 @@ class RiderSessionViewModel(
             com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("orders")
                 .whereEqualTo("riderId", user.uid)
                 .whereIn("orderStatus", listOf(
+                    com.example.foodapp.data.models.OrderStatus.PREPARING.name,
                     com.example.foodapp.data.models.OrderStatus.RIDER_ASSIGNED.name,
                     com.example.foodapp.data.models.OrderStatus.READY_FOR_RIDER.name,
                     com.example.foodapp.data.models.OrderStatus.OUT_FOR_DELIVERY.name

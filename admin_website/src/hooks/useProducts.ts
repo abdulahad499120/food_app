@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { Product } from '../models/types';
 import toast from 'react-hot-toast';
@@ -49,5 +49,45 @@ export const useProducts = () => {
     }
   };
 
-  return { products, loading, updateProductAvailability };
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    try {
+      const promise = addDoc(collection(db, "products"), product);
+      await toast.promise(promise, {
+        loading: 'Adding product...',
+        success: 'Product added successfully!',
+        error: 'Failed to add product'
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const updateProduct = async (product: Product) => {
+    try {
+      const { id, ...data } = product;
+      const promise = updateDoc(doc(db, "products", id), data);
+      await toast.promise(promise, {
+        loading: 'Updating product...',
+        success: 'Product updated successfully!',
+        error: 'Failed to update product'
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteProduct = async (productId: string) => {
+    try {
+      const promise = deleteDoc(doc(db, "products", productId));
+      await toast.promise(promise, {
+        loading: 'Deleting product...',
+        success: 'Product deleted!',
+        error: 'Failed to delete product'
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return { products, loading, updateProductAvailability, addProduct, updateProduct, deleteProduct };
 };

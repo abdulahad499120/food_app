@@ -31,6 +31,37 @@ class ActiveDeliveryViewModel(
         }
     }
 
+    private val _routePoints = MutableStateFlow<List<com.mapbox.geojson.Point>>(emptyList())
+    val routePoints: StateFlow<List<com.mapbox.geojson.Point>> = _routePoints.asStateFlow()
+
+    fun fetchRoute(context: android.content.Context, origin: com.mapbox.geojson.Point, destination: com.mapbox.geojson.Point) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val token = context.getString(context.resources.getIdentifier("mapbox_access_token", "string", context.packageName))
+                val url = "https://api.mapbox.com/directions/v5/mapbox/driving/" +
+                    "${origin.longitude()},${origin.latitude()};" +
+                    "${destination.longitude()},${destination.latitude()}" +
+                    "?geometries=geojson&overview=full&access_token=$token"
+
+                val response = java.net.URL(url).readText()
+                val json = org.json.JSONObject(response)
+                val routes = json.getJSONArray("routes")
+                if (routes.length() > 0) {
+                    val coords = routes.getJSONObject(0)
+                        .getJSONObject("geometry")
+                        .getJSONArray("coordinates")
+                    val points = (0 until coords.length()).map { i ->
+                        val pair = coords.getJSONArray(i)
+                        com.mapbox.geojson.Point.fromLngLat(pair.getDouble(0), pair.getDouble(1))
+                    }
+                    _routePoints.value = points
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("ActiveDeliveryViewModel", "Route fetch failed: ${e.message}")
+            }
+        }
+    }
+
     fun updateOrderStatus(orderId: String, status: OrderStatus, onSuccess: () -> Unit) {
         viewModelScope.launch {
             try {

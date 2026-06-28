@@ -103,7 +103,7 @@ class SafepayVaultViewModel(
             _uiState.value = SafepayVaultState.Loading
             
             // 5. Submit Enrollment
-            val enrolled = repository.submitEnrollment(
+            val enrollResult = repository.submitEnrollment(
                 tracker = tracker,
                 sessionId = sessionId,
                 street = "Street 1",
@@ -112,17 +112,25 @@ class SafepayVaultViewModel(
                 country = "PK"
             )
             
-            if (!enrolled) {
-                _uiState.value = SafepayVaultState.Error("Failed Payer Authentication Enrollment")
-                return@launch
-            }
-
-            // 6. Submit Final Authorization
-            val authorized = repository.submitAuthorization(tracker)
-            if (authorized) {
-                _uiState.value = SafepayVaultState.Success
-            } else {
-                _uiState.value = SafepayVaultState.Error("Failed final authorization")
+            when (enrollResult) {
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.RequiresChallenge -> {
+                    // For now, fail it because AddEditPaymentScreen doesn't have Challenge WebView UI yet
+                    _uiState.value = SafepayVaultState.Error("OTP Challenge is required but not supported on this screen. Please add card during checkout.")
+                    return@launch
+                }
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.Error -> {
+                    _uiState.value = SafepayVaultState.Error(enrollResult.message)
+                    return@launch
+                }
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.Success -> {
+                    // 6. Submit Final Authorization
+                    val authorized = repository.submitAuthorization(tracker)
+                    if (authorized) {
+                        _uiState.value = SafepayVaultState.Success
+                    } else {
+                        _uiState.value = SafepayVaultState.Error("Failed final authorization")
+                    }
+                }
             }
         }
     }

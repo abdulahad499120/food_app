@@ -19,5 +19,15 @@ data class CheckoutUiState(
     val status: CheckoutStatus = CheckoutStatus.Idle,
     val errorMessage: String? = null,
     val placedOrderId: String? = null,
-    val pendingVaultedDdc: PendingVaultedDdc? = null
+    val pendingVaultedDdc: PendingVaultedDdc? = null,
+    
+    // Native Card Input Fields
+    val cardNumber: String = "",
+    val cardExpMonth: String = "",
+    val cardExpYear: String = "",
+    val cardCvv: String = "",
+    val saveCardForLater: Boolean = false,
+    
+    // For 3DS Challenge (OTP)
+    val pendingChallengeUrl: String? = null
 )

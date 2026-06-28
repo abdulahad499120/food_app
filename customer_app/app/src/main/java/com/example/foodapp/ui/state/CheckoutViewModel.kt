@@ -66,6 +66,26 @@ class CheckoutViewModel : ViewModel() {
         _uiState.update { it.copy(paymentMethodId = id, paymentMethodName = name) }
     }
 
+    fun updateCardNumber(number: String) {
+        _uiState.update { it.copy(cardNumber = number) }
+    }
+
+    fun updateCardExpMonth(month: String) {
+        if (month.length <= 2) _uiState.update { it.copy(cardExpMonth = month) }
+    }
+
+    fun updateCardExpYear(year: String) {
+        if (year.length <= 4) _uiState.update { it.copy(cardExpYear = year) }
+    }
+
+    fun updateCardCvv(cvv: String) {
+        if (cvv.length <= 4) _uiState.update { it.copy(cardCvv = cvv) }
+    }
+
+    fun toggleSaveCardForLater(save: Boolean) {
+        _uiState.update { it.copy(saveCardForLater = save) }
+    }
+
     fun clearCheckoutUrl() {
         _safepayCheckoutUrl.value = null
     }
@@ -128,6 +148,92 @@ class CheckoutViewModel : ViewModel() {
                     _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initialize Safepay session: \${e.message}") }
                     return@launch
                 }
+            } else if (paymentId == "native_card") {
+                val state = _uiState.value
+                val cleanCard = state.cardNumber.replace(" ", "").replace("-", "")
+                if (cleanCard.length !in 16..19) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Invalid card number.") }
+                    return@launch
+                }
+                val formattedYear = if (state.cardExpYear.length == 2) "20${state.cardExpYear}" else state.cardExpYear
+                if (formattedYear.length != 4) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Expiration year must be 4 digits.") }
+                    return@launch
+                }
+
+                val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
+                val paymentRepo = com.example.foodapp.data.repository.PaymentRepository()
+                
+                // 1. Get or Create Customer
+                var safepayCustomerId = paymentRepo.getSafepayCustomerId(userId)
+                if (safepayCustomerId == null) {
+                    val email = user?.email ?: "guest@example.com"
+                    val phone = user?.phoneNumber ?: "00000000000"
+                    val (firstName, lastName) = userName.split(" ", limit = 2).let { 
+                        Pair(it[0], if (it.size > 1) it[1] else it[0]) 
+                    }
+                    safepayCustomerId = safepayRepo.createCustomer(email, firstName, lastName, phone, "PK")
+                    if (safepayCustomerId == null) {
+                        _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to create customer record") }
+                        return@launch
+                    }
+                    if (user != null) {
+                        paymentRepo.setSafepayCustomerId(userId, safepayCustomerId)
+                    }
+                }
+
+                // 2. Initialize Tracker
+                val mode = if (state.saveCardForLater) "instrument" else "payment"
+                val tracker = safepayRepo.initializeTracker(safepayCustomerId, mode = mode)
+                if (tracker == null) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initialize payment tracker") }
+                    return@launch
+                }
+
+                // 3. Setup Auth (Tokenize Card)
+                val authSetup = safepayRepo.submitAuthSetup(tracker, cleanCard, state.cardExpMonth, formattedYear, state.cardCvv)
+                if (authSetup == null) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to tokenize card details. Check your card number and expiry.") }
+                    return@launch
+                }
+
+                // Save pending state for DDC and Order placement
+                _pendingTracker = tracker
+                _pendingOrder = Order(
+                    userId = userId,
+                    customerName = userName,
+                    deliveryAddress = if (fulfillmentMode == com.example.foodapp.ui.state.FulfillmentMode.DELIVERY) _uiState.value.address else com.example.foodapp.data.models.Address(),
+                    items = cartState.items,
+                    subtotal = cartState.subtotal,
+                    deliveryFee = cartState.deliveryFee,
+                    totalAmount = cartState.total,
+                    orderStatus = com.example.foodapp.data.models.OrderStatus.PENDING,
+                    branchId = branchId ?: "branch_pia",
+                    branchLocation = branchGeoPoint,
+                    deliveryLocation = deliveryGeoPoint ?: _uiState.value.address.location,
+                    paymentMethodId = _uiState.value.paymentMethodId,
+                    itemSummary = "${cartState.items.sumOf { it.quantity }} Items",
+                    generalSector = if (fulfillmentMode == com.example.foodapp.ui.state.FulfillmentMode.DELIVERY && _uiState.value.address.city.isNotBlank()) _uiState.value.address.city else "Local Sector",
+                    fulfillmentMode = fulfillmentMode.name
+                )
+                _pendingPayWithStars = cartState.payWithStars
+                _pendingIsGuest = user == null
+                _pendingUserId = user?.uid
+
+                // 4. Trigger 3DS DDC
+                _uiState.update { 
+                    it.copy(
+                        status = CheckoutStatus.Idle, 
+                        pendingVaultedDdc = PendingVaultedDdc(
+                            tracker = tracker,
+                            accessToken = authSetup.accessToken,
+                            ddcUrl = authSetup.deviceDataCollectionUrl
+                        )
+                    ) 
+                }
+                
+                // Stop execution here! We wait for onVaultedCardDdcSuccess to be called.
+                return@launch
             } else if (isVaultedCard) {
                 val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
                 val paymentRepo = com.example.foodapp.data.repository.PaymentRepository()
@@ -198,7 +304,6 @@ class CheckoutViewModel : ViewModel() {
 
     fun onVaultedCardDdcSuccess(sessionId: String, context: android.content.Context) {
         val tracker = _pendingTracker ?: return
-        val order = _pendingOrder ?: return
 
         viewModelScope.launch {
             _uiState.update { it.copy(pendingVaultedDdc = null, status = CheckoutStatus.Loading) }
@@ -206,12 +311,54 @@ class CheckoutViewModel : ViewModel() {
             val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
             val result = safepayRepo.completeVaultedCardPayment(tracker, sessionId)
 
-            if (result.isFailure) {
-                _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Payment failed: ${result.exceptionOrNull()?.message}") }
-                clearPendingVaultedState()
-                return@launch
+            when (result) {
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.RequiresChallenge -> {
+                    _uiState.update { 
+                        it.copy(
+                            status = CheckoutStatus.Idle, 
+                            pendingChallengeUrl = result.url
+                        ) 
+                    }
+                    // We don't clear pending state here because we need it after challenge
+                    return@launch
+                }
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.Error -> {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Payment failed: ${result.message}") }
+                    clearPendingVaultedState()
+                    return@launch
+                }
+                is com.example.foodapp.data.remote.SafepayRepository.EnrollmentResult.Success -> {
+                    placePendingOrder(context)
+                }
             }
+        }
+    }
 
+    fun onChallengeSuccess(context: android.content.Context) {
+        val tracker = _pendingTracker ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(pendingChallengeUrl = null, status = CheckoutStatus.Loading) }
+            val safepayRepo = com.example.foodapp.data.remote.SafepayRepository()
+            
+            // After challenge success, we submit final authorization
+            val authorized = safepayRepo.submitAuthorization(tracker)
+            if (authorized) {
+                placePendingOrder(context)
+            } else {
+                _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Authorization failed.") }
+                clearPendingVaultedState()
+            }
+        }
+    }
+
+    fun onChallengeFailure() {
+        _uiState.update { it.copy(pendingChallengeUrl = null, status = CheckoutStatus.Error, errorMessage = "3DS Challenge failed or cancelled.") }
+        clearPendingVaultedState()
+    }
+
+    private fun placePendingOrder(context: android.content.Context) {
+        val order = _pendingOrder ?: return
+        viewModelScope.launch {
             orderRepository.placeOrder(order).fold(
                 onSuccess = { orderId ->
                     if (_pendingPayWithStars) {

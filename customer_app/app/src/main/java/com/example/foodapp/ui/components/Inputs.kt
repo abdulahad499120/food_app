@@ -32,7 +32,8 @@ fun TextInput(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default
 ) {
     val isError = errorMessage != null
 
@@ -59,7 +60,8 @@ fun TextInput(
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary
             ),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = keyboardOptions
         )
         if (isError) {
             Spacer(modifier = Modifier.height(4.dp))
