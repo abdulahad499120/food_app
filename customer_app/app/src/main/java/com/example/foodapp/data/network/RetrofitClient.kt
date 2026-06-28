@@ -32,17 +32,7 @@ object RetrofitClient {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
-    private val payfastRetrofit = Retrofit.Builder()
-        .baseUrl("https://ipg.apps.payfast.com.pk/sandbox/") // Payfast Sandbox
-        .client(okHttpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
-
     val safepayApi: SafepayApi by lazy {
         retrofit.create(SafepayApi::class.java)
-    }
-
-    val payfastApi: com.example.foodapp.data.remote.PayfastApi by lazy {
-        payfastRetrofit.create(com.example.foodapp.data.remote.PayfastApi::class.java)
     }
 }

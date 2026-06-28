@@ -33,13 +33,14 @@ class SafepayRepository {
         }
     }
 
-    suspend fun initializeTracker(customerId: String, mode: String = "instrument"): String? {
+    suspend fun initializeTracker(customerId: String, mode: String = "instrument", amount: Double? = null): String? {
         return withContext(Dispatchers.IO) {
             try {
                 val req = SafepayTrackerRequest(
                     user = customerId,
                     merchantApiKey = publicKey,
                     mode = mode,
+                    amount = amount?.let { (it * 100).toLong() },
                     entryMode = "raw"
                 )
                 val response = api.initializeTracker(req)

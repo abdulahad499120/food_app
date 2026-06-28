@@ -103,6 +103,7 @@ dependencies {
   implementation("androidx.compose.material:material-icons-extended")
   implementation("io.coil-kt:coil-compose:2.5.0")
   implementation("com.airbnb.android:lottie-compose:6.4.0")
+  implementation("androidx.webkit:webkit:1.11.0")
   // DataStore for Preferences
   implementation("androidx.datastore:datastore-preferences:1.0.0")
   implementation(libs.kotlinx.serialization.json)

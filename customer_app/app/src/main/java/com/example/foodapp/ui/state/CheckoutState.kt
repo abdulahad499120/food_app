@@ -20,6 +20,7 @@ data class CheckoutUiState(
     val errorMessage: String? = null,
     val placedOrderId: String? = null,
     val pendingVaultedDdc: PendingVaultedDdc? = null,
+    val savedCards: List<com.example.foodapp.data.remote.SafepayCustomerDetailsResponse.WalletItem> = emptyList(),
     
     // Native Card Input Fields
     val cardNumber: String = "",
@@ -31,6 +32,6 @@ data class CheckoutUiState(
     // For 3DS Challenge (OTP)
     val pendingChallengeUrl: String? = null,
     
-    // For PayFast
-    val payfastCheckoutUrl: String? = null
+    // For Safepay Hosted Checkout (WebView)
+    val safepayHostedCheckoutUrl: String? = null
 )
