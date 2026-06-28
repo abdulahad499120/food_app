@@ -69,22 +69,40 @@ class MainActivity : ComponentActivity() {
                     
                     val activeOrderId = sessionState.activeOrderId ?: manualActiveOrderId
                     
-                    if (activeOrderId == null) {
-                        com.example.foodapp.ui.screens.JobPoolScreen(
-                            onJobClaimed = { claimedId -> manualActiveOrderId = claimedId },
-                            onNavigateToHistory = { navController.navigate("order_history") },
-                            viewModel = sessionViewModel
-                        )
-                    } else {
-                        com.example.foodapp.ui.screens.ActiveDeliveryScreen(
-                            orderId = activeOrderId,
-                            onDeliveryComplete = { manualActiveOrderId = null }
-                        )
-                    }
-                }
-                composable("order_history") {
-                    com.example.foodapp.ui.screens.OrderHistoryScreen(
-                        onNavigateBack = { navController.popBackStack() }
+                    com.example.foodapp.ui.screens.MainDashboardScreen(
+                        onLogout = {
+                            navController.navigate("auth") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                        },
+                        jobsContent = {
+                            if (activeOrderId == null) {
+                                com.example.foodapp.ui.screens.JobPoolScreen(
+                                    onJobClaimed = { claimedId -> manualActiveOrderId = claimedId },
+                                    onNavigateToHistory = { /* History is now a tab */ },
+                                    viewModel = sessionViewModel
+                                )
+                            } else {
+                                com.example.foodapp.ui.screens.ActiveDeliveryScreen(
+                                    orderId = activeOrderId,
+                                    onDeliveryComplete = { manualActiveOrderId = null }
+                                )
+                            }
+                        },
+                        historyContent = {
+                            com.example.foodapp.ui.screens.OrderHistoryScreen(
+                                onNavigateBack = null
+                            )
+                        },
+                        profileContent = {
+                            com.example.foodapp.ui.screens.RiderProfileScreen(
+                                onLogout = {
+                                    navController.navigate("auth") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                }
+                            )
+                        }
                     )
                 }
             }
