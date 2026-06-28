@@ -153,7 +153,8 @@ fun CheckoutScreen(
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Text(text = "Place Order • Rs. ${cartState.total.toInt()}")
+                                val btnText = if (uiState.paymentMethodId == "payfast_webview") "Pay with PayFast • Rs. ${cartState.total.toInt()}" else "Place Order • Rs. ${cartState.total.toInt()}"
+                                Text(text = btnText)
                             }
                         }
                     }
@@ -488,27 +489,27 @@ fun CheckoutScreen(
                         Text("Credit / Debit Card", style = MaterialTheme.typography.bodyLarge)
                     }
 
-                    // Safepay Hosted Checkout Option
+                    // PayFast Hosted Checkout Option
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .bounceClick {
-                                viewModel.setPaymentMethod("safepay_card", "Safepay Checkout")
+                                viewModel.setPaymentMethod("payfast_webview", "PayFast Checkout")
                                 showPaymentSheet = false
                             }
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
-                            selected = uiState.paymentMethodId == "safepay_card",
+                            selected = uiState.paymentMethodId == "payfast_webview",
                             onClick = {
-                                viewModel.setPaymentMethod("safepay_card", "Safepay Checkout")
+                                viewModel.setPaymentMethod("payfast_webview", "PayFast Checkout")
                                 showPaymentSheet = false
                             },
                             colors = RadioButtonDefaults.colors(selectedColor = BrandPrimary)
                         )
                         Spacer(modifier = Modifier.width(16.dp))
-                        Text("Safepay Hosted Checkout", style = MaterialTheme.typography.bodyLarge)
+                        Text("PayFast Checkout", style = MaterialTheme.typography.bodyLarge)
                     }
 
                     if (paymentsState is com.example.foodapp.ui.state.PaymentListUiState.Success) {
@@ -664,6 +665,24 @@ fun CheckoutScreen(
                 },
                 onFailure = {
                     viewModel.onChallengeFailure()
+                }
+            )
+        }
+    }
+
+    // Payfast Checkout WebView
+    uiState.payfastCheckoutUrl?.let { url ->
+        androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize()) {
+            PayfastCheckoutWebView(
+                checkoutUrl = url,
+                onSuccess = { txId ->
+                    viewModel.onPayfastSuccess(context, txId)
+                },
+                onCancel = {
+                    viewModel.onPayfastCancel()
+                },
+                onFailure = { errorMsg ->
+                    viewModel.onPayfastFailure(errorMsg)
                 }
             )
         }

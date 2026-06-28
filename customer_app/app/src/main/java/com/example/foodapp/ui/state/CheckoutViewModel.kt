@@ -88,6 +88,7 @@ class CheckoutViewModel : ViewModel() {
 
     fun clearCheckoutUrl() {
         _safepayCheckoutUrl.value = null
+        _uiState.update { it.copy(payfastCheckoutUrl = null) }
     }
 
     fun placeOrder(authState: AuthState, context: android.content.Context,
@@ -145,7 +146,46 @@ class CheckoutViewModel : ViewModel() {
 
                     // Result is Success, proceed with Order Creation
                 } catch (e: Exception) {
-                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initialize Safepay session: \${e.message}") }
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initialize Safepay session: ${e.message}") }
+                    return@launch
+                }
+            } else if (paymentId == "payfast_webview") {
+                try {
+                    val fakeOrderId = java.util.UUID.randomUUID().toString().replace("-", "").take(10)
+                    
+                    // We save the pending state so we can place the order when WebView returns success
+                    _pendingOrder = Order(
+                        userId = userId,
+                        customerName = userName,
+                        deliveryAddress = if (fulfillmentMode == com.example.foodapp.ui.state.FulfillmentMode.DELIVERY) _uiState.value.address else com.example.foodapp.data.models.Address(),
+                        items = cartState.items,
+                        subtotal = cartState.subtotal,
+                        deliveryFee = cartState.deliveryFee,
+                        totalAmount = cartState.total,
+                        orderStatus = com.example.foodapp.data.models.OrderStatus.PENDING,
+                        branchId = branchId ?: "branch_pia",
+                        branchLocation = branchGeoPoint,
+                        deliveryLocation = deliveryGeoPoint ?: _uiState.value.address.location,
+                        paymentMethodId = _uiState.value.paymentMethodId,
+                        itemSummary = "${cartState.items.sumOf { it.quantity }} Items",
+                        generalSector = if (fulfillmentMode == com.example.foodapp.ui.state.FulfillmentMode.DELIVERY && _uiState.value.address.city.isNotBlank()) _uiState.value.address.city else "Local Sector",
+                        fulfillmentMode = fulfillmentMode.name
+                    )
+                    _pendingPayWithStars = cartState.payWithStars
+                    _pendingIsGuest = user == null
+                    _pendingUserId = user?.uid
+
+                    val payfastRepo = com.example.foodapp.data.remote.PayfastRepository(RetrofitClient.payfastApi)
+                    val result = payfastRepo.generateCheckoutUrl(amount = cartState.total, orderId = fakeOrderId)
+                    
+                    if (result.isSuccess) {
+                        _uiState.update { it.copy(status = CheckoutStatus.Idle, payfastCheckoutUrl = result.getOrNull()) }
+                    } else {
+                        _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "Failed to initiate PayFast checkout: ${result.exceptionOrNull()?.message}") }
+                    }
+                    return@launch
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(status = CheckoutStatus.Error, errorMessage = "PayFast Error: ${e.message}") }
                     return@launch
                 }
             } else if (paymentId == "native_card") {
@@ -390,6 +430,19 @@ class CheckoutViewModel : ViewModel() {
         _pendingPayWithStars = false
         _pendingIsGuest = false
         _pendingUserId = null
+    }
+
+    fun onPayfastSuccess(context: android.content.Context, transactionId: String?) {
+        _uiState.update { it.copy(payfastCheckoutUrl = null, status = CheckoutStatus.Loading) }
+        placePendingOrder(context)
+    }
+    
+    fun onPayfastCancel() {
+        _uiState.update { it.copy(payfastCheckoutUrl = null, status = CheckoutStatus.Idle, errorMessage = "Payment was cancelled.") }
+    }
+    
+    fun onPayfastFailure(error: String) {
+        _uiState.update { it.copy(payfastCheckoutUrl = null, status = CheckoutStatus.Error, errorMessage = error) }
     }
 
     fun resetState() {

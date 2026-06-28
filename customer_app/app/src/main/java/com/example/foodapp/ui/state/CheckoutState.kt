@@ -29,5 +29,8 @@ data class CheckoutUiState(
     val saveCardForLater: Boolean = false,
     
     // For 3DS Challenge (OTP)
-    val pendingChallengeUrl: String? = null
+    val pendingChallengeUrl: String? = null,
+    
+    // For PayFast
+    val payfastCheckoutUrl: String? = null
 )
